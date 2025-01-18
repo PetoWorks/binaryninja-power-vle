@@ -1,7 +1,12 @@
-from typing import Any
-from abc import ABC, abstractmethod
-from functools import cache, cached_property
-from enum import Enum
+'''
+Instruction base classes
+'''
+
+from typing_extensions import Any
+
+from binaryninja.architecture import InstructionInfo
+from binaryninja.function import InstructionTextToken
+from binaryninja.lowlevelil import LowLevelILFunction
 
 
 def _bits(num: int, start: int, end: int) -> int:
@@ -9,199 +14,154 @@ def _bits(num: int, start: int, end: int) -> int:
     return (num >> start) & mask
 
 
-class Instruction(ABC):
+class Instruction:
     fields: dict[str, tuple[int]]
-    opcode: int
+    uses: tuple[str]
+    length: int = 4
 
-    def __init__(self, data: int):
-        assert self.opcode == self.fetch_opcode(data)
-        self._raw = data
-    
-    @cached_property
-    def raw(self) -> int:
-        return self._raw
-    
-    @cache
-    def bits(self, start: int, end: int) -> int:
-        return _bits(self.raw, start, end)
+    @classmethod
+    def fetch_opcode(cls, data: int) -> int:
+        return _bits(data, *cls.fields["OPCD"])
 
-    @cache
-    def get_field(self, name: str) -> int:
-        bitrange = self.fields[name]
-        if not bitrange:
-            raise ValueError(f"Field {name} variadic")
-        return self.bits(*bitrange)
-    
-    @abstractmethod
-    def get_instruction_info(self, *_, **__) -> ...:
-        ...
+    @classmethod
+    def fetch_fields(cls, data: int) -> dict[str, int]:
+        return {field_name: _bits(data, *cls.fields[field_name]) for field_name in cls.uses}
 
-    @abstractmethod
-    def get_instruction_text(self, *_, **__) -> ...:
-        ...
+    @classmethod
+    def get_instruction_info(cls, fields: tuple[str, int], addr: int) -> InstructionInfo:
+        return InstructionInfo(length=cls.length)
 
-    @abstractmethod
-    def get_instruction_low_level_il(self, *_, **__) -> ...:
-        ...
+    @classmethod
+    def get_instruction_text(cls, fields: tuple[str, int], addr: int) -> tuple[list[InstructionTextToken], int]:
+        raise NotImplementedError
+
+    @classmethod
+    def get_instruction_low_level_il(cls, fields: tuple[str, int], addr: int, il: LowLevelILFunction) -> int:
+        raise NotImplementedError
 
 
-class FormatI(Instruction):
+class InstTempHalf(Instruction):
+    length = 2
+
+
+class InstTempWord(Instruction):
+    length = 4
+
+
+'''
+VLE Instruction Formats
+'''
+
+
+class FormatBD8(Instruction):
     fields = {
-        "LI": (6, 30),
-        "AA": (30, 31),
+        "BO16": (5, 6),
+        "BI16": (6, 8),
+        "BD8": (8, 16),
+        "XO": (6, 7),
+        "LK": (7, 8)
+    }
+
+
+class FormatC(Instruction):
+    fields = {
+        "LK": (15, 16)
+    }
+
+
+class FormatIM5(Instruction):
+    fields = {
+        "XO": (6, 7),
+        "UI5": (7, 12),
+        "RX": (12, 16),
+    }
+
+
+class FormatOIM5(Instruction):
+    fields = {
+        "XO": (6, 7),
+        "OIM5": (7, 12),
+        "RS": (12, 16)
+    }
+
+
+class FormatIM7(Instruction):
+    fields = {
+        "UI7": (5, 12),
+        "RX": (12, 16)
+    }
+
+
+class FormatR(Instruction):
+    fields = {
+        "XO": (6, 12),
+        "RX": (12, 16)
+    }
+
+
+class FormatRR(Instruction):
+    fields = {
+        "XO_6_8": (6, 8),
+        "XO_6_7": (6, 7),
+        "RC": (7, 8),
+        "RY": (8, 12),
+        "ARY": (8, 12),
+        "RX": (12, 16),
+        "ARX": (12, 16)
+    }
+
+
+class FormatSD4(Instruction):
+    fields = {
+        "SD4": (4, 8),
+        "RZ": (8, 12),
+        "RX": (12, 16)
+    }
+
+
+class FormatBD15(Instruction):
+    fields = {
+        "BO32": (10, 12),
+        "BI32": (12, 16),
+        "BD15": (16, 31),
         "LK": (31, 32)
     }
 
 
-class FormatB(Instruction):
+class FormatBD24(Instruction):
     fields = {
-        "BO": (6, 11),
-        "BI": (11, 16),
-        "BD": (16, 30),
-        "AA": (30, 31),
+        "BD24": (7, 31),
         "LK": (31, 32)
     }
 
 
-class FormatSC(Instruction):
-    fields = {
-        "LEV": (20, 27),
-    }
-
-    def __init__(self, data):
-        super().__init__(data)
-        assert self.bits(30, 31) == 1
-
-
-class FormatD(Instruction):
-    fields = {
-        "RT": (6, 11),
-        "RS": (6, 11),
-        "TO": (6, 11),
-        "FRS": (6, 11),
-        "FRT": (6, 11),
-        "BF": (6, 9),
-        "L": (10, 11),
-        "RA": (11, 16),
-        "D": (16, 32),
-        "SI": (16, 32),
-        "UI": (16, 32)
-    }
-
-
-class FormatDS(Instruction):
+class FormatD8(Instruction):
     fields = {
         "RT": (6, 11),
         "RS": (6, 11),
         "RA": (11, 16),
-        "DS": (16, 30),
-        "XO": (30, 32)
+        "XO": (16, 24),
+        "D8": (24, 32)
     }
 
 
-class FormatX(Instruction):
+class FormatI16A(Instruction):
+    fields = {
+        "SI_6": (6, 11),
+        "UI_6": (6, 11),
+        "RA": (11, 16),
+        "XO": (16, 21),
+        "SI_21": (21, 32),
+        "UI_21": (21, 32)
+    }
+
+
+class FormatI16L(Instruction):
     fields = {
         "RT": (6, 11),
-        "RS": (6, 11),
-        "TO": (6, 11),
-        "FRT": (6, 11),
-        "FRS": (6, 11),
-        "BT": (6, 11),
-        "VRT": (6, 11),
-        "VRS": (6, 11),
-        "MO": (6, 11),
-        "BF": (6, 9),
-        "L": None,
-        "TH": (7, 11),
-        "CT": (7, 11),
-        "RA": (11, 16),
-        "FRA": (11, 16),
-        "SR": (12, 16),
-        "BFA": (11, 14),
-        "RB": (16, 21),
-        "NB": (16, 21),
-        "SH": (16, 21),
-        "FRB": (16, 21),
-        "U": (16, 20),
-        "E": (16, 17),
-        "XO": (21, 31),
-        "Rc": (31, 32)
-    }
-
-
-class FormatXL(Instruction):
-    fields = {
-        "BT": (6, 11),
-        "BO": (6, 11),
-        "BF": (6, 9),
-        "BA": (11, 16),
-        "BI": (11, 16),
-        "BFA": (11, 14),
-        "BB": (16, 21),
-        "BH": (19, 21),
-        "XO": (21, 31),
-        "LK": (31, 32)
-    }
-
-
-class FormatXFX(Instruction):
-    fields = {
-        "RT": (6, 11),
-        "DUI": (6, 11),
-        "RS": (6, 11),
-        "SPR": (11, 21),
-        "TBR": (11, 21),
-        "FXM": (12, 20),
-        "DCR": (11, 21),
-        "DCS": (11, 21),
-        "DUIS": (11, 21),
-        "XO": (31, 32)
-    }
-
-
-class FormatXFL(Instruction):
-    fields = {
-        "FLM": (7, 15),
-        "FRB": (16, 21),
-        "XO": (21, 31),
-        "Rc": (31, 32)
-    }
-
-
-class FormatXS(Instruction):
-    fields = {
-        "RS": (6, 11),
-        "RA": (11, 16),
-        "SH": (16, 21),
-        "XO": (21, 30),
-        "SH30": (30, 31),
-        "Rc": (31, 32)
-    }
-
-
-class FormatXO(Instruction):
-    fields = {
-        "RT": (6, 11),
-        "RA": (11, 16),
-        "RB": (16, 21),
-        "OE": (21, 22),
-        "XO": (22, 31),
-        "Rc": (31, 32)
-    }
-
-
-class FormatA(Instruction):
-    fields = {
-        "FRT": (6, 11),
-        "RT": (6, 11),
-        "FRA": (11, 16),
-        "RA": (11, 16),
-        "FRB": (16, 21),
-        "RB": (16, 21),
-        "FRC": (21, 26),
-        "BC": (21, 26),
-        "XO": (26, 31),
-        "Rc": (31, 32)
+        "UI_11": (11, 16),
+        "XO": (16, 21),
+        "UI_21": (21, 32)
     }
 
 
@@ -213,85 +173,32 @@ class FormatM(Instruction):
         "SH": (16, 21),
         "MB": (21, 26),
         "ME": (26, 31),
-        "Rc": (31, 32)
+        "Rc": (31, 32),
+        "XO": (31, 32)
     }
 
 
-class FormatMD(Instruction):
-    fields = {
-        "RS": (6, 11),
-        "RA": (11, 16),
-        "SH": (16, 21),
-        "MB": (21, 27),
-        "ME": (21, 27),
-        "XO": (27, 30),
-        "SH30": (30, 31),
-        "Rc": (31, 32)
-    }
-
-
-class FormatMDS(Instruction):
-    fields = {
-        "RS": (6, 11),
-        "RA": (11, 16),
-        "SH": (16, 21),
-        "MB": (21, 27),
-        "ME": (21, 27),
-        "XO": (27, 31),
-        "Rc": (31, 32)
-    }
-
-
-class FormatVA(Instruction):
-    fields = {
-        "VRT": (6, 11),
-        "VRA": (11, 16),
-        "VRB": (16, 21),
-        "VRC": (21, 26),
-        "SHB": (22, 26),
-        "XO": (27, 32),
-    }
-
-
-class FormatVC(Instruction):
-    fields = {
-        "VRT": (6, 11),
-        "VRA": (11, 16),
-        "VRB": (16, 21),
-        "Rc": (21, 22),
-        "XO": (22, 32)
-    }
-
-
-class FormatVX(Instruction):
-    fields = {
-        "VRT": (6, 11),
-        "VRA": (11, 16),
-        "SIM": (11, 16),
-        "UIM": None,
-        "VRB": (16, 21),
-        "XO": (21, 32)
-    }
-
-
-class FormatEVX(Instruction):
-    fields = {
-        "RS": (6, 11),
-        "RT": (6, 11),
-        "BF": (6, 9),
-        "RA": (11, 16),
-        "UI": None,
-        "SI": (11, 16),
-        "RB": (16, 21),
-        "XO": (21, 32),
-    }
-
-
-class FormatEVS(Instruction):
+class FormatSCI8(Instruction):
     fields = {
         "RT": (6, 11),
+        "RS": (6, 11),
+        "XO": (6, 11),
+        "BF32": (9, 11),
         "RA": (11, 16),
-        "RB": (16, 21),
-        "XO": (21, 29),
-        "BFA": (29, 32)
+        "XO_16_20": (16, 20),
+        "XO_16_21": (16, 21),
+        "Rc": (20, 21),
+        "F": (21, 22),
+        "SCL": (22, 24),
+        "UI8": (24, 32)
+    }
+
+
+class FormatLI20(Instruction):
+    fields = {
+        "RT": (6, 11),
+        "LI20_11": (11, 16),
+        "XO": (16, 17),
+        "LI20_17": (17, 21),
+        "LI20_21": (21, 32)
     }
