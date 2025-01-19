@@ -2,30 +2,30 @@
 Instruction base classes
 '''
 
-from typing_extensions import Any
-
 from binaryninja.architecture import InstructionInfo
 from binaryninja.function import InstructionTextToken
 from binaryninja.lowlevelil import LowLevelILFunction
 
 
-def _bits(num: int, start: int, end: int) -> int:
+def _bits(num: int, length: int, start: int, end: int) -> int:
     mask = ~(~0 << (end - start))
-    return (num >> start) & mask
+    return (num >> (length - end)) & mask
 
 
 class Instruction:
+    name: str
+    category: str
     fields: dict[str, tuple[int]]
     uses: tuple[str]
     length: int = 4
 
     @classmethod
     def fetch_opcode(cls, data: int) -> int:
-        return _bits(data, *cls.fields["OPCD"])
+        return _bits(data, 32, *cls.fields["OPCD"])
 
     @classmethod
     def fetch_fields(cls, data: int) -> dict[str, int]:
-        return {field_name: _bits(data, *cls.fields[field_name]) for field_name in cls.uses}
+        return {field_name: _bits(data, 32, *cls.fields[field_name]) for field_name in cls.uses}
 
     @classmethod
     def get_instruction_info(cls, fields: tuple[str, int], addr: int) -> InstructionInfo:
@@ -40,12 +40,8 @@ class Instruction:
         raise NotImplementedError
 
 
-class InstTempHalf(Instruction):
-    length = 2
-
-
-class InstTempWord(Instruction):
-    length = 4
+def InstTemp(name: str = "unknown", category: str = "UNK", length: int = 4) -> type[Instruction]:
+    return type(f"InstTemp_{name}", (Instruction, ), {"name": name, "category": category, "length": length})
 
 
 '''
