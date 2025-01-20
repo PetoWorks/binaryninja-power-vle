@@ -19,6 +19,13 @@ class Instruction:
     uses: tuple[str]
     length: int = 4
 
+    @staticmethod
+    def gpr2str(reg: int) -> str:
+        if reg < 32 and reg >= 0:
+            return f"r{reg}"
+        else:
+            raise ValueError(f"Invalid register number: {reg}")
+
     @classmethod
     def fetch_fields(cls, data: int) -> dict[str, int]:
         return {field_name: _bits(data, 32, *cls.fields[field_name]) for field_name in cls.uses}
