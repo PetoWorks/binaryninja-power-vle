@@ -1,0 +1,21 @@
+{
+  "pluginmetadataversion": 2,
+  "name": "POWER VLE Architecture",
+  "type": [
+    "architecture",
+    "binaryview"
+  ],
+  "api": [
+    "python3"
+  ],
+  "description": "POWER VLE Architecture",
+  "longdescription": "",
+  "platforms": [
+    "Darwin",
+    "Linux",
+    "Windows"
+  ],
+  "version": "0.0.1",
+  "author": "Dohyeon Kim (@d0now) of Peto Works",
+  "minimumbinaryninjaversion": 3164
+}

@@ -22,26 +22,33 @@ if __name__ == "__main__":
     if len(data) % 4:
         data += b'\x00' * (4 - len(data) % 4)
     
-    counter = {}
+    counter = {"unknown": 0}
     
     from io import BytesIO
     bio = BytesIO(data)
     while (cur := bio.read(4)):
 
         inst = Decoder.decode(cur, categories=("VLE", ))
-        if inst.name not in counter:
-            counter[inst.name] = 0
-        counter[inst.name] += 1
+        if not inst:
+            counter["unknown"] += 1
+            inst_name = "unknown"
+            inst_size = 4
+        else:
+            if inst.name not in counter:
+                counter[inst.name] = 0
+            counter[inst.name] += 1
+            inst_name = inst.name
+            inst_size = inst.length
 
-        if inst.length == 2:
+        if inst_size == 2:
             bio.seek(-2, 1) if len(cur) > 2 else None
             if args.print:
                 data = int.from_bytes(cur[:2], 'big')
-                print(f"{data:04x}      {inst.name}")
-        elif inst.length == 4:
+                print(f"{data:04x}      {inst_name}")
+        elif inst_size == 4:
             if args.print:
                 data = int.from_bytes(cur, 'big')
-                print(f"{data:08x}  {inst.name}")
+                print(f"{data:08x}  {inst_name}")
         else:
             raise ValueError
 

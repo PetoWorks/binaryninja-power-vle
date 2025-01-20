@@ -3,7 +3,7 @@ Instruction base classes
 '''
 
 from binaryninja.architecture import InstructionInfo
-from binaryninja.function import InstructionTextToken
+from binaryninja.function import InstructionTextToken, InstructionTextTokenType
 from binaryninja.lowlevelil import LowLevelILFunction
 
 
@@ -20,24 +20,21 @@ class Instruction:
     length: int = 4
 
     @classmethod
-    def fetch_opcode(cls, data: int) -> int:
-        return _bits(data, 32, *cls.fields["OPCD"])
-
-    @classmethod
     def fetch_fields(cls, data: int) -> dict[str, int]:
         return {field_name: _bits(data, 32, *cls.fields[field_name]) for field_name in cls.uses}
 
     @classmethod
-    def get_instruction_info(cls, fields: tuple[str, int], addr: int) -> InstructionInfo:
+    def get_instruction_info(cls, fields: dict[str, int], addr: int) -> InstructionInfo:
         return InstructionInfo(length=cls.length)
 
     @classmethod
-    def get_instruction_text(cls, fields: tuple[str, int], addr: int) -> tuple[list[InstructionTextToken], int]:
-        raise NotImplementedError
+    def get_instruction_text(cls, fields: dict[str, int], addr: int) -> tuple[list[InstructionTextToken], int]:
+        return [InstructionTextToken(InstructionTextTokenType.TextToken, cls.name)], cls.length
 
     @classmethod
-    def get_instruction_low_level_il(cls, fields: tuple[str, int], addr: int, il: LowLevelILFunction) -> int:
-        raise NotImplementedError
+    def get_instruction_low_level_il(cls, fields: dict[str, int], addr: int, il: LowLevelILFunction) -> int:
+        il.append(il.unimplemented())
+        return cls.length
 
 
 def InstTemp(name: str = "unknown", category: str = "UNK", length: int = 4) -> type[Instruction]:

@@ -1,8 +1,11 @@
 from typing import Tuple, List
+
 from binaryninja.architecture import Architecture, RegisterInfo, InstructionInfo
 from binaryninja.function import InstructionTextToken
 from binaryninja.lowlevelil import LowLevelILFunction
 from binaryninja.enums import Endianness
+
+from .powervle.decoder import Decoder
 
 
 class PowerVLE(Architecture):
@@ -23,7 +26,7 @@ class PowerVLE(Architecture):
         'cr6': RegisterInfo("cr6", 4, 0),
         'cr7': RegisterInfo("cr7", 4, 0),
         'lr': RegisterInfo("lr", 4, 0),
-        'ctr': RegisterInfo("ctf", 4, 0),
+        'ctr': RegisterInfo("ctr", 4, 0),
         'r0': RegisterInfo("r0", 4, 0),
         'r1': RegisterInfo("r1", 4, 0),
         'r2': RegisterInfo("r2", 4, 0),
@@ -61,10 +64,13 @@ class PowerVLE(Architecture):
     stack_pointer = "r1"
 
     def get_instruction_info(self, data: bytes, addr: int) -> InstructionInfo | None:
-        ...
+        return Decoder.get_instruction_info(data, addr, categories=("VLE", ))
 
     def get_instruction_text(self, data: bytes, addr: int) -> Tuple[List[InstructionTextToken], int] | None:
-        ...
+        return Decoder.get_instruction_text(data, addr, categories=("VLE", ))
     
     def get_instruction_low_level_il(self, data: bytes, addr: int, il: LowLevelILFunction) -> int | None:
-        ...
+        return Decoder.get_instruction_low_level_il(data, addr, il, categories=("VLE", ))
+
+
+PowerVLE.register()

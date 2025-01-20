@@ -1,10 +1,15 @@
-from powervle.instructions import Instruction, InstTemp
+from typing import Tuple, List
+
+from binaryninja.architecture import InstructionInfo, InstructionTextToken
+from binaryninja.lowlevelil import LowLevelILFunction
+
+from ..instructions import Instruction, InstTemp
+from ..instructions.fixedpoint import Inst_SE_LI
 
 
 def _bits(num: int, length: int, start: int, end: int) -> int:
     mask = ~(~0 << (end - start))
     return (num >> (length - end)) & mask
-
 
 
 class Level:
@@ -16,20 +21,17 @@ class Level:
 
     def validate(self, inst: type[Instruction], **options) -> type[Instruction]:
         if inst.category not in options['categories']:
-            return InstTemp()
+            return None
         return inst
 
-    def decode(self, data: int, **options) -> type[Instruction]:
-
+    def decode(self, data: int, **options) -> type[Instruction] | None:
         key = _bits(data, 32, self.start, self.end)
-        if key not in self.childs:
-            return InstTemp()
-
-        child = self.childs[key]
-        if type(child) == Level:
-            return child.decode(data, **options)
-        else:
-            return self.validate(child, **options)
+        if key in self.childs:
+            child = self.childs[key]
+            if type(child) == Level:
+                return child.decode(data, **options)
+            else:
+                return self.validate(child, **options)
 
 
 class Select(Level):
@@ -37,14 +39,12 @@ class Select(Level):
     def __init__(self, childs: list):
         self.childs = childs
     
-    def decode(self, data: int, **options) -> type[Instruction]:
+    def decode(self, data: int, **options) -> type[Instruction] | None:
         for dup in self.childs:
             if type(dup) == Level:
                 return dup.decode(data, **options)
-            else:
-                if self.validate(dup, **options).name != "unknown":
-                    return dup
-        return InstTemp()
+            elif self.validate(dup, **options):
+                return dup
 
 
 class Decoder:
@@ -162,7 +162,7 @@ class Decoder:
                 0x6: InstTemp("se_and", "VLE", 2),
                 0x7: InstTemp("se_and", "VLE", 2),
             }),
-            0b10: InstTemp("se_li", "VLE", 2),
+            0b10: Inst_SE_LI,
         }),
 
         # opcode bits level (inst[0:6])
@@ -230,6 +230,35 @@ class Decoder:
     })
 
     @classmethod
-    def decode(cls, data: bytes, **options) -> type[Instruction]:
-        inst = int.from_bytes(data[:4] if len(data) >= 4 else data.ljust(4, b'\0'), 'big')
-        return cls.root.decode(inst, **options)
+    def decode(cls, data: bytes, **options) -> type[Instruction] | None:
+        target = int.from_bytes(data[:4] if len(data) >= 4 else data.ljust(4, b'\0'), 'big')
+        return cls.root.decode(target, **options)
+    
+    # binary ninja interfaces
+    
+    @classmethod
+    def get_instruction_info(cls, data: bytes, addr: int, **options) -> InstructionInfo | None:
+        if (inst := cls.decode(data, **options)):
+            if hasattr(inst, 'uses'):
+                fields = inst.fetch_fields(int.from_bytes(data[:inst.length], 'big'))
+            else:
+                fields = {}
+            return inst.get_instruction_info(fields, addr)
+    
+    @classmethod
+    def get_instruction_text(cls, data: bytes, addr: int, **options) -> Tuple[List[InstructionTextToken], int] | None:
+        if (inst := cls.decode(data, **options)):
+            if hasattr(inst, 'uses'):
+                fields = inst.fetch_fields(int.from_bytes(data[:inst.length], 'big'))
+            else:
+                fields = {}
+            return inst.get_instruction_text(fields, addr)
+    
+    @classmethod
+    def get_instruction_low_level_il(cls, data: bytes, addr: int, il: LowLevelILFunction, **options) -> int:
+        if (inst := cls.decode(data, **options)):
+            if hasattr(inst, 'uses'):
+                fields = inst.fetch_fields(int.from_bytes(data[:inst.length], 'big'))
+            else:
+                fields = {}
+            return inst.get_instruction_low_level_il(fields, addr, il)
