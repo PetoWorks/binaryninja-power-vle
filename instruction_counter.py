@@ -22,13 +22,15 @@ if __name__ == "__main__":
     if len(data) % 4:
         data += b'\x00' * (4 - len(data) % 4)
     
+    decoder = Decoder(PowerCategory.SP)
+    
     counter = {"unknown": 0}
     
     from io import BytesIO
     bio = BytesIO(data)
     while (cur := bio.read(4)):
 
-        inst = Decoder.decode(cur, categories=("VLE", ))
+        inst = decoder.decode(cur)
         if not inst:
             counter["unknown"] += 1
             inst_name = "unknown"
