@@ -1,5 +1,5 @@
 from typing import Callable
-from .utils import get_bits_from_int
+from .utils import *
 
 
 def scimm(mode: int, f: int, scl: int, ui8: int) -> int:
@@ -13,10 +13,11 @@ def scimm(mode: int, f: int, scl: int, ui8: int) -> int:
 
 class Instruction:
     name: str
-    operands: list[str | bytes | int]
     category: str
-    length: int = 4
+    length: int
     fields: dict[str, tuple[int, int] | Callable]
+    operands: list[str | bytes | int]
+    branch: bool = False
 
     def __init__(self, data: int):
         self.data = data & ((1 << self.length) - 1)
@@ -24,7 +25,7 @@ class Instruction:
     def __getattr__(self, key: str):
         return self.get(key)
 
-    def get(self, name: str) -> int:
+    def get(self, name: str) -> int | Callable:
         field = self.fields[name]
         if type(field) == tuple:
             return get_bits_from_int(self.data, 32, *field)
@@ -32,91 +33,101 @@ class Instruction:
             return field(self)
 
 
-def Inst(name: str, operands: list[str | bytes | int], category: str, length: int, fields) -> type[Instruction]:
-    return type(f"Inst_{name}", (Instruction, ),
-                {"name": name, "operands": operands, "category": category, "length": length, "fields": fields})
+def Inst(
+    name: str,
+    category: str,
+    length: int,
+    fields: dict,
+    operands: list[str | bytes | int],
+    **other
+) -> type[Instruction]:
+
+    return type(f"Inst_{name}", (Instruction, ), {
+        "name": name,
+        "category": category,
+        "length": length,
+        "fields": fields,
+        "operands": operands,
+        **other
+    }, operands)
 
 
-def InstBD8(name: str, operands: list[str | bytes | int], category: str, **fields) -> type[Instruction]:
-    return Inst(name, operands, category, 2, {
+def InstBD8(name: str, category: str, operands: list[str | bytes | int]) -> type[Instruction]:
+    return Inst(name, category, 2, {
         "OPCD": (0, 5),
         "BO16": (5, 6),
         "BI16": (6, 8),
         "XO": (6, 7),
         "LK": (7, 8),
         "BD8": (8, 16),
-        **fields
-    })
+        "NIA": lambda s: lambda x, b: mask(b + sign_extend(s.BD8 << 1, 8), x),
+    }, operands, branch=True)
 
 
-def InstBD15(name: str, operands: list[str | bytes | int], category: str, **fields) -> type[Instruction]:
-    return Inst(name, operands, category, 4, {
+def InstBD15(name: str, category: str, operands: list[str | bytes | int]) -> type[Instruction]:
+    return Inst(name, category, 4, {
         "OPCD": (0, 10),
         "BO32": (10, 12),
         "BI32": (12, 16),
         "BD15": (16, 31),
         "LK": (31, 32),
-        **fields
-    })
+        "NIA": lambda s: lambda x, b: mask(b + sign_extend(s.BD15 << 1, 15), x),
+    }, operands, branch=True)
 
 
-def InstBD24(name: str, operands: list[str | bytes | int], category: str, **fields) -> type[Instruction]:
-    return Inst(name, operands, category, 4, {
+def InstBD24(name: str, category: str, operands: list[str | bytes | int]) -> type[Instruction]:
+    return Inst(name, category, 4, {
         "OPCD": (0, 6),
         "BD24": (7, 31),
         "LK": (31, 32),
-        **fields
-    })
+        "NIA": lambda s: lambda x, b: mask(b + sign_extend(s.BD24 << 1, 24), x),
+    }, operands, branch=True)
 
 
-def InstC(name: str, operands: list[str | bytes | int], category: str, **fields) -> type[Instruction]:
-    return Inst(name, operands, category, 2, {
+def InstC(name: str, category: str, operands: list[str | bytes | int]) -> type[Instruction]:
+    return Inst(name, category, 2, {
         "OPCD": (0, 16),
         "LK": (15, 16),
-        **fields
-    })
+    }, operands)
 
 
-def InstIM5(name: str, operands: list[str | bytes | int], category: str, **fields) -> type[Instruction]:
-    return Inst(name, operands, category, 2, {
+def InstIM5(name: str, category: str, operands: list[str | bytes | int]) -> type[Instruction]:
+    return Inst(name, category, 2, {
         "OPCD": (0, 6),
         "XO": (6, 7),
         "UI5": (7, 12),
         "RX": (12, 16),
-        **fields
-    })
+    }, operands)
 
 
-def InstOIM5(name: str, operands: list[str | bytes | int], category: str, **fields) -> type[Instruction]:
-    return Inst(name, operands, category, 2, {
+def InstOIM5(name: str, category: str, operands: list[str | bytes | int]) -> type[Instruction]:
+    return Inst(name, category, 2, {
         "OPCD": (0, 6),
         "XO": (6, 7),
         "OIM5": (7, 12),
         "RS": (12, 16),
-        **fields
-    })
+        "OIMM": lambda s: s.OIM5 + 1
+    }, operands)
 
 
-def InstIM7(name: str, operands: list[str | bytes | int], category: str, **fields) -> type[Instruction]:
-    return Inst(name, operands, category, 2, {
+def InstIM7(name: str, category: str, operands: list[str | bytes | int]) -> type[Instruction]:
+    return Inst(name, category, 2, {
         "OPCD": (0, 5),
         "UI7": (5, 12),
         "RX": (12, 16),
-        **fields
-    })
+    }, operands)
 
 
-def InstR(name: str, operands: list[str | bytes | int], category: str, **fields) -> type[Instruction]:
-    return Inst(name, operands, category, 2, {
+def InstR(name: str, category: str, operands: list[str | bytes | int]) -> type[Instruction]:
+    return Inst(name, category, 2, {
         "OPCD": (0, 6),
         "XO": (6, 12),
         "RX": (12, 16),
-        **fields
-    })
+    }, operands)
 
 
-def InstRR(name: str, operands: list[str | bytes | int], category: str, **fields) -> type[Instruction]:
-    return Inst(name, operands, category, 2, {
+def InstRR(name: str, category: str, operands: list[str | bytes | int]) -> type[Instruction]:
+    return Inst(name, category, 2, {
         "OPCD": (0, 6),
         "XO": (6, 8),
         "Rc": (7, 8),
@@ -124,22 +135,21 @@ def InstRR(name: str, operands: list[str | bytes | int], category: str, **fields
         "ARY": (8, 12),
         "RX": (12, 16),
         "ARX": (12, 16),
-        **fields
-    })
+    }, operands)
 
 
-def InstSD4(name: str, operands: list[str | bytes | int], category: str, **fields) -> type[Instruction]:
-    return Inst(name, operands, category, 2, {
+def InstSD4(name: str, category: str, operands: list[str | bytes | int]) -> type[Instruction]:
+    return Inst(name, category, 2, {
         "OPCD": (0, 4),
         "SD4": (4, 8),
         "RZ": (8, 12),
         "RX": (12, 16),
-        **fields
-    })
+        "SD4-sext": lambda s: sign_extend(s.SD4, 4)
+    }, operands)
 
 
-def InstD(name: str, operands: list[str | bytes | int], category: str, **fields) -> type[Instruction]:
-    return Inst(name, operands, category, 4, {
+def InstD(name: str, category: str, operands: list[str | bytes | int]) -> type[Instruction]:
+    return Inst(name, category, 4, {
         "OPCD": (0, 6),
         "RT": (6, 11),
         "RS": (6, 11),
@@ -152,24 +162,25 @@ def InstD(name: str, operands: list[str | bytes | int], category: str, **fields)
         "D": (16, 32),
         "SI": (16, 32),
         "UI": (16, 32),
-        **fields
-    })
+        "SI-sext": lambda s: sign_extend(s.SI, 16),
+        "D-sext": lambda s: sign_extend(s.D, 16),
+    }, operands)
 
 
-def InstD8(name: str, operands: list[str | bytes | int], category: str, **fields) -> type[Instruction]:
-    return Inst(name, operands, category, 4, {
+def InstD8(name: str, category: str, operands: list[str | bytes | int]) -> type[Instruction]:
+    return Inst(name, category, 4, {
         "OPCD": (0, 6),
         "RT": (6, 11),
         "RS": (6, 11),
         "RA": (11, 16),
         "XO": (16, 24),
         "D8": (24, 32),
-        **fields
-    })
+        "D8-sext": lambda s: sign_extend(s.D8, 8)
+    }, operands)
 
 
-def InstI16A(name: str, operands: list[str | bytes | int], category: str, **fields) -> type[Instruction]:
-    return Inst(name, operands, category, 4, {
+def InstI16A(name: str, category: str, operands: list[str | bytes | int]) -> type[Instruction]:
+    return Inst(name, category, 4, {
         "OPCD": (0, 6),
         "SI_6": (6, 11),
         "UI_6": (6, 11),
@@ -179,24 +190,23 @@ def InstI16A(name: str, operands: list[str | bytes | int], category: str, **fiel
         "UI_21": (21, 32),
         "SI": lambda s: (s.SI_6 << 11) | s.SI_21,
         "UI": lambda s: (s.UI_6 << 11) | s.UI_21,
-        **fields
-    })
+        "SI-sext": lambda s: sign_extend(s.SI, 16)
+    }, operands)
 
 
-def InstI16L(name: str, operands: list[str | bytes | int], category: str, **fields) -> type[Instruction]:
-    return Inst(name, operands, category, 4, {
+def InstI16L(name: str, category: str, operands: list[str | bytes | int]) -> type[Instruction]:
+    return Inst(name, category, 4, {
         "OPCD": (0, 6),
         "RT": (6, 11),
         "UI_11": (11, 16),
         "XO": (16, 21),
         "UI_21": (21, 32),
-        "SI": lambda s: (s.UI_11 << 11) | s.UI_21,
-        **fields
-    })
+        "UI": lambda s: (s.UI_11 << 11) | s.UI_21,
+    }, operands)
 
 
-def InstM(name: str, operands: list[str | bytes | int], category: str, **fields) -> type[Instruction]:
-    return Inst(name, operands, category, 4, {
+def InstM(name: str, category: str, operands: list[str | bytes | int]) -> type[Instruction]:
+    return Inst(name, category, 4, {
         "OPCD": (0, 6),
         "RS": (6, 11),
         "RA": (11, 16),
@@ -206,11 +216,11 @@ def InstM(name: str, operands: list[str | bytes | int], category: str, **fields)
         "ME": (26, 31),
         "Rc": (31, 32),
         "XO": (31, 32)
-    })
+    }, operands)
 
 
-def InstSCI8(name: str, operands: list[str | bytes | int], category: str, **fields) -> type[Instruction]:
-    return Inst(name, operands, category, 4, {
+def InstSCI8(name: str, category: str, operands: list[str | bytes | int]) -> type[Instruction]:
+    return Inst(name, category, 4, {
         "OPCD": (0, 6),
         "RT": (6, 11),
         "RS": (6, 11),
@@ -223,14 +233,12 @@ def InstSCI8(name: str, operands: list[str | bytes | int], category: str, **fiel
         "F": (21, 22),
         "SCL": (22, 24),
         "UI8": (24, 32),
-        "SCIMM32": lambda s: scimm(32, s.F, s.SCL, s.UI8),
-        "SCIMM64": lambda s: scimm(64, s.F, s.SCL, s.UI8),
-        **fields
-    })
+        "SCIMM": lambda s: lambda b: scimm(b, s.F, s.SCL, s.UI8)
+    }, operands)
 
 
-def InstLI20(name: str, operands: list[str | bytes | int], category: str, **fields) -> type[Instruction]:
-    return Inst(name, operands, category, 4, {
+def InstLI20(name: str, category: str, operands: list[str | bytes | int]) -> type[Instruction]:
+    return Inst(name, category, 4, {
         "OPCD": (0, 6),
         "RT": (6, 11),
         "LI20_11": (11, 16),
@@ -238,5 +246,5 @@ def InstLI20(name: str, operands: list[str | bytes | int], category: str, **fiel
         "LI20_17": (17, 21),
         "LI20_21": (21, 32),
         "LI20": lambda s: (s.LI20_17 << 16) | (s.LI20_11 << 11) | s.LI20_21,
-        **fields,
-    })
+        "LI20-sext": lambda s: sign_extend(s.LI20, 20)
+    }, operands)
