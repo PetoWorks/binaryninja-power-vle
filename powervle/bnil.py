@@ -1,6 +1,6 @@
 from typing import Tuple, List
 
-from binaryninja.log import log_warn, log_error
+from binaryninja.log import log_warn, log_error, log_debug
 
 from binaryninja.architecture import (
     FlagType, FlagWriteTypeName,
@@ -211,7 +211,8 @@ class PowerVLE(Architecture):
         return type(f"PowerVLE_{name}", (PowerVLE, ), {'name': name, 'categories': cat})
 
     def decode(self, data: bytes) -> PowerVLEInstr | None:
-        return self.decoder.decode(data)
+        inst = self.decoder.decode(data)
+        return inst
 
     _bcmap = (
         ("ge", "le", "ne", "ns", "dnz"),
@@ -230,9 +231,9 @@ class PowerVLE(Architecture):
             if bo32 >= 2:
                 return bo32 - 2, 4
             else:
-                return int(bo32 == 0), instruction.BI32 % 4
+                return bo32, instruction.BI32 % 4
         elif instruction.name == "se_bc":
-            return int(bo32 == 0), instruction.BI16
+            return instruction.BO16, instruction.BI16
 
     def _get_instruction_mnemonic(self, instruction: PowerVLEInstr) -> str:
 
@@ -253,20 +254,22 @@ class PowerVLE(Architecture):
 
     def get_instruction_info(self, data: bytes, addr: int) -> InstructionInfo | None:
 
+        info = InstructionInfo()
+
         instruction = self.decode(data)
         if not instruction:
-            return
+            info.length = 4
+            return info
 
-        info = InstructionInfo()
         info.length = instruction.length
 
         if instruction.name == "e_b" or instruction.name == "se_b":
-            nia = instruction.NIA64(addr) if self._is_64() else instruction.NIA32(addr)
+            nia = instruction.NIA(self._bit(), addr)
             if nia != (addr + instruction.length):
                 info.add_branch(BranchType.CallDestination if instruction.LK else BranchType.UnconditionalBranch, nia)
 
         elif instruction.name == "e_bc" or instruction.name == "se_bc":
-            nia = instruction.NIA64(addr) if self._is_64() else instruction.NIA32(addr)
+            nia = instruction.NIA(self._bit(), addr)
             if nia != (addr + instruction.length):
                 info.add_branch(BranchType.TrueBranch, nia)
                 info.add_branch(BranchType.FalseBranch, addr + instruction.length)
@@ -286,17 +289,19 @@ class PowerVLE(Architecture):
 
         instruction = self.decode(data)
         if not instruction:
-            return
+            return [InstructionTextToken(InstructionTextTokenType.TextToken, "#UNAVAILABLE")], 4
 
         tokens = []
 
         mnemonic = self._get_instruction_mnemonic(instruction)
-        tokens.append(InstructionTextToken(InstructionTextTokenType.OpcodeToken, mnemonic))
+        tokens.append(InstructionTextToken(InstructionTextTokenType.InstructionToken, mnemonic))
 
         for index, operand in enumerate(instruction.operands):
 
-            if index > 0:
-                tokens.append(InstructionTextTokenType.OperandSeparatorToken, ", ")
+            if index == 0:
+                tokens.append(InstructionTextToken(InstructionTextTokenType.TextToken, " " * (12 - len(mnemonic))))
+            else:
+                tokens.append(InstructionTextToken(InstructionTextTokenType.OperandSeparatorToken, ", "))
 
             if operand in ("RA", "RT", "RS"):
                 regnum = instruction.get(operand)
@@ -311,7 +316,7 @@ class PowerVLE(Architecture):
                 if value < 0b1000:
                     regnum = value
                 else:
-                    regnum = 24 + value
+                    regnum = 24 + (value & 0b111)
                 token = (InstructionTextTokenType.RegisterToken, f"r{regnum}")
 
             elif operand == "BF32":
@@ -327,8 +332,9 @@ class PowerVLE(Architecture):
 
             else:
                 opr = instruction.get(operand)
-                if not opr:
-                    log_warn(f"There are unimplemented field: {operand}")
+                if opr == None:
+                    log_warn(f"There are unimplemented field: {mnemonic} {operand}")
+                    log_debug(f"{instruction.name} {instruction.fields}")
                     token = (InstructionTextTokenType.TextToken, "#UNAVAILABLE")
                 else:
                     token = (InstructionTextTokenType.IntegerToken, hex(opr), opr)
@@ -341,7 +347,7 @@ class PowerVLE(Architecture):
 
         instruction = self.decode(data)
         if not instruction:
-            return
+            return 4
 
         il.unimplemented()
         return instruction.length

@@ -53,7 +53,7 @@ class Map:
         self.end = end
         self.childs = childs
 
-    def decode(self, data: bytes) -> Instruction | None:
+    def decode(self, data: int) -> Instruction | None:
         key = get_bits_from_int(data, 32, self.start, self.end)
         if key in self.childs:
             child = self.childs[key]
@@ -249,12 +249,12 @@ class Decoder:
             }),
         }),
         
-        0x8: InstSD4("se_lbz", "VLE", ["RZ", "RX", "SD4"]),
-        0x9: InstSD4("se_stb", "VLE", ["RZ", "RX", "SD4"]),
-        0xA: InstSD4("se_lhz", "VLE", ["RZ", "RX", "SD4"]),
-        0xB: InstSD4("se_sth", "VLE", ["RZ", "RX", "SD4"]),
-        0xC: InstSD4("se_lwz", "VLE", ["RZ", "RX", "SD4"]),
-        0xD: InstSD4("se_stw", "VLE", ["RZ", "RX", "SD4"]),
+        0x8: InstSD4("se_lbz", "VLE", ["RZ", "RX", "SD4-sext"]),
+        0x9: InstSD4("se_stb", "VLE", ["RZ", "RX", "SD4-sext"]),
+        0xA: InstSD4("se_lhz", "VLE", ["RZ", "RX", "SD4-sext"]),
+        0xB: InstSD4("se_sth", "VLE", ["RZ", "RX", "SD4-sext"]),
+        0xC: InstSD4("se_lwz", "VLE", ["RZ", "RX", "SD4-sext"]),
+        0xD: InstSD4("se_stw", "VLE", ["RZ", "RX", "SD4-sext"]),
 
         0xE: Level(4, 5, {
             0: InstBD8("se_bc", "VLE", ["NIA"]),
@@ -274,7 +274,7 @@ class Decoder:
                 self.map = self.VLE_INST_EXTRA[cat].map(self.map)
 
     def decode(self, data: bytes) -> Instruction | None:
-        target = int.from_bytes(data[:4] if len(data) >= 4 else data.ljust(4, b'\0'), 'big')
+        target = int.from_bytes(data[:4] if len(data) >= 4 else data + b'\0\0', 'big')
         instruction = self.map.decode(target)
         if instruction and len(data) >= instruction.length:
             return instruction

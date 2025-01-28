@@ -17,18 +17,19 @@ class Instruction:
     length: int
     fields: dict[str, tuple[int, int] | Callable]
     operands: list[str | bytes | int]
-    branch: bool = False
 
     def __init__(self, data: int):
-        self.data = data & ((1 << self.length) - 1)
+        self.data = (data >> (32 - self.length * 8)) & ((1 << (self.length * 8)) - 1)
 
     def __getattr__(self, key: str):
         return self.get(key)
 
-    def get(self, name: str) -> int | Callable:
+    def get(self, name: str) -> int | Callable | None:
+        if name not in self.fields:
+            return
         field = self.fields[name]
         if type(field) == tuple:
-            return get_bits_from_int(self.data, 32, *field)
+            return get_bits_from_int(self.data, self.length * 8, *field)
         else:
             return field(self)
 
@@ -42,6 +43,10 @@ def Inst(
     **other
 ) -> type[Instruction]:
 
+    for opr in operands:
+        if opr not in fields:
+            raise ValueError(f"instrucion {name} has invalid operand: {opr}")
+
     return type(f"Inst_{name}", (Instruction, ), {
         "name": name,
         "category": category,
@@ -49,7 +54,7 @@ def Inst(
         "fields": fields,
         "operands": operands,
         **other
-    }, operands)
+    })
 
 
 def InstBD8(name: str, category: str, operands: list[str | bytes | int]) -> type[Instruction]:
@@ -61,7 +66,7 @@ def InstBD8(name: str, category: str, operands: list[str | bytes | int]) -> type
         "LK": (7, 8),
         "BD8": (8, 16),
         "NIA": lambda s: lambda x, b: mask(b + sign_extend(s.BD8 << 1, 8), x),
-    }, operands, branch=True)
+    }, operands)
 
 
 def InstBD15(name: str, category: str, operands: list[str | bytes | int]) -> type[Instruction]:
@@ -72,7 +77,7 @@ def InstBD15(name: str, category: str, operands: list[str | bytes | int]) -> typ
         "BD15": (16, 31),
         "LK": (31, 32),
         "NIA": lambda s: lambda x, b: mask(b + sign_extend(s.BD15 << 1, 15), x),
-    }, operands, branch=True)
+    }, operands)
 
 
 def InstBD24(name: str, category: str, operands: list[str | bytes | int]) -> type[Instruction]:
@@ -81,7 +86,7 @@ def InstBD24(name: str, category: str, operands: list[str | bytes | int]) -> typ
         "BD24": (7, 31),
         "LK": (31, 32),
         "NIA": lambda s: lambda x, b: mask(b + sign_extend(s.BD24 << 1, 24), x),
-    }, operands, branch=True)
+    }, operands)
 
 
 def InstC(name: str, category: str, operands: list[str | bytes | int]) -> type[Instruction]:
@@ -105,7 +110,7 @@ def InstOIM5(name: str, category: str, operands: list[str | bytes | int]) -> typ
         "OPCD": (0, 6),
         "XO": (6, 7),
         "OIM5": (7, 12),
-        "RS": (12, 16),
+        "RX": (12, 16),
         "OIMM": lambda s: s.OIM5 + 1
     }, operands)
 
