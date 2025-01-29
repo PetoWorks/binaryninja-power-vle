@@ -19,12 +19,10 @@ from binaryninja.enums import (
 )
 
 from .decoder import Decoder, PowerCategory
-from .instruction import Instruction as PowerVLEInstr
 from .utils import *
 
 
 def get_expr(il: LowLevelILFunction, operand: ILRegisterType, size: int) -> ExpressionIndex:
-
     if isinstance(operand, int):
         return il.const(size, operand)
     elif isinstance(operand, ILRegister):
@@ -203,97 +201,63 @@ class PowerVLE(Architecture):
 
     def __init__(self):
         super().__init__()
-        self.decoder = Decoder(self.categories)
+        self.decode = Decoder(self.categories)
 
     @classmethod
     def extend(cls, name: str, categories: PowerCategory):
         cat = PowerCategory.VLE & categories
         return type(f"PowerVLE_{name}", (PowerVLE, ), {'name': name, 'categories': cat})
 
-    def decode(self, data: bytes) -> PowerVLEInstr | None:
-        inst = self.decoder.decode(data)
-        return inst
-
-    _bcmap = (
-        ("ge", "le", "ne", "ns", "dnz"),
-        ("lt", "gt", "eq", "so", "dz"),
-    )
-
-    def _is_64(self) -> bool:
-        return PowerCategory.X64 in self.categories
-    
-    def _bit(self) -> bool:
-        return 64 if self._is_64() else 32
-
-    def _get_instruction_branch_condition(self, instruction: PowerVLEInstr) -> tuple[int, int] | None:
-        if instruction.name == "e_bc":
-            bo32 = instruction.BO32
-            if bo32 >= 2:
-                return bo32 - 2, 4
-            else:
-                return bo32, instruction.BI32 % 4
-        elif instruction.name == "se_bc":
-            return instruction.BO16, instruction.BI16
-
-    def _get_instruction_mnemonic(self, instruction: PowerVLEInstr) -> str:
-
-        mnemonic = instruction.name
-
-        bc = self._get_instruction_branch_condition(instruction)
-        if bc:
-            branch, cond = bc
-            mnemonic = mnemonic[:-1] + self._bcmap[branch][cond]
-
-        if "LK" in instruction.fields:
-            mnemonic += "l" if instruction.LK != 0 else ""
-        
-        if "Rc" in instruction.fields:
-            mnemonic += "." if instruction.Rc != 0 else ""
-        
-        return mnemonic
-
     def get_instruction_info(self, data: bytes, addr: int) -> InstructionInfo | None:
 
         info = InstructionInfo()
 
-        instruction = self.decode(data)
+        instruction = self.decode(data, addr)
         if not instruction:
             info.length = 4
             return info
 
         info.length = instruction.length
 
-        if instruction.name == "e_b" or instruction.name == "se_b":
-            nia = instruction.NIA(self._bit(), addr)
-            if nia != (addr + instruction.length):
-                info.add_branch(BranchType.CallDestination if instruction.LK else BranchType.UnconditionalBranch, nia)
+        if instruction.branch:
 
-        elif instruction.name == "e_bc" or instruction.name == "se_bc":
-            nia = instruction.NIA(self._bit(), addr)
+            if "NIA" in instruction.fields:
+                nia = instruction.NIA
+                if nia != (addr + instruction.length):
+                    info.add_branch(BranchType.CallDestination if instruction.LK else BranchType.UnconditionalBranch, nia)
+                    return info
+            
+            elif "LK" not in instruction.fields:
+
+                if instruction.name == "se_blr":
+                    info.add_branch(BranchType.FunctionReturn)
+                    return info
+                
+                elif instruction.name == "se_bctr":
+                    info.add_branch(BranchType.IndirectBranch)
+                    return info
+
+            info.add_branch(BranchType.UnresolvedBranch)
+            return info
+        
+        elif instruction.conditional_branch:
+            nia = instruction.NIA
             if nia != (addr + instruction.length):
                 info.add_branch(BranchType.TrueBranch, nia)
                 info.add_branch(BranchType.FalseBranch, addr + instruction.length)
-
-        elif instruction.name == "se_bctr":
-            info.add_branch(BranchType.UnresolvedBranch)
+                return info
         
-        elif instruction.name == "se_blr":
-            if instruction.LK:
-                info.add_branch(BranchType.FunctionReturn)
-            else:
-                info.add_branch(BranchType.UnresolvedBranch)
-
         return info
 
     def get_instruction_text(self, data: bytes, addr: int) -> Tuple[List[InstructionTextToken], int] | None:
 
-        instruction = self.decode(data)
+        instruction = self.decode(data, addr)
         if not instruction:
             return [InstructionTextToken(InstructionTextTokenType.TextToken, "#UNAVAILABLE")], 4
 
         tokens = []
 
-        mnemonic = self._get_instruction_mnemonic(instruction)
+        mnemonic = instruction.mnemonic
         tokens.append(InstructionTextToken(InstructionTextTokenType.InstructionToken, mnemonic))
 
         for index, operand in enumerate(instruction.operands):
@@ -322,14 +286,6 @@ class PowerVLE(Architecture):
             elif operand == "BF32":
                 token = (InstructionTextTokenType.RegisterToken, f"cr{instruction.BF32}")
 
-            elif operand == "SCIMM":
-                scimm = instruction.SCIMM(self._bit())
-                token = (InstructionTextTokenType.IntegerToken, hex(scimm), scimm)
-
-            elif operand == "NIA":
-                target_addr = instruction.NIA(self._bit(), addr)
-                token = (InstructionTextTokenType.PossibleAddressToken, hex(target_addr), target_addr)
-
             else:
                 opr = instruction.get(operand)
                 if opr == None:
@@ -345,7 +301,7 @@ class PowerVLE(Architecture):
 
     def get_instruction_low_level_il(self, data: bytes, addr: int, il: LowLevelILFunction) -> int | None:
 
-        instruction = self.decode(data)
+        instruction = self.decode(data, addr)
         if not instruction:
             return 4
 
