@@ -2,11 +2,13 @@ from typing_extensions import Self
 from enum import Flag, auto
 
 from .instruction import (
-    Instruction, InstBD15,
-    InstBD24, InstBD8, InstC, InstD,
-    InstD8, InstI16A, InstI16L, InstIM5,
-    InstIM7, InstLI20, InstM, InstOIM5,
-    InstR, InstRR, InstSCI8, InstSD4
+    Instruction,
+    InstBD15, InstBD24, InstBD8, InstC,
+    InstD, InstD8, InstI16A, InstI16L,
+    InstIM5, InstIM7, InstLI20,
+    InstM, InstOIM5,
+    InstR, InstRR,
+    InstSCI8, InstSD4,
 )
 
 from .utils import get_bits_from_int
@@ -53,14 +55,14 @@ class Map:
         self.end = end
         self.childs = childs
 
-    def decode(self, data: int) -> Instruction | None:
+    def decode(self, data: int) -> type[Instruction] | None:
         key = get_bits_from_int(data, 32, self.start, self.end)
         if key in self.childs:
             child = self.childs[key]
             if isinstance(child, Map):
                 return child.decode(data)
             else:
-                return child(data)
+                return child
 
 class Lv:
     start: int
@@ -110,10 +112,10 @@ class Decoder:
                     0x0: InstC("se_illegal", "VLE", []),
                     0x1: InstC("se_isync", "VLE", []),
                     0x2: InstC("se_sc", "VLE", []),
-                    0x4: InstC("se_blr", "VLE", []),
-                    0x5: InstC("se_blr", "VLE", []),
-                    0x6: InstC("se_bctr", "VLE", []),
-                    0x7: InstC("se_bctr", "VLE", []),
+                    0x4: InstC("se_blr", "VLE", [], branch=True),
+                    0x5: InstC("se_blr", "VLE", [], branch=True),
+                    0x6: InstC("se_bctr", "VLE", [], branch=True),
+                    0x7: InstC("se_bctr", "VLE", [], branch=True),
                     0x8: InstC("se_rfi", "VLE", []),
                     0x9: InstC("se_rfci", "VLE", []),
                     0xA: InstC("se_rfdi", "VLE", []),
@@ -156,19 +158,19 @@ class Decoder:
                     0x8: InstD8("e_lmw", "VLE", ["RT", "RA", "D8-sext"]),
                     0x9: InstD8("e_stmw", "VLE", ["RS", "RA", "D8-sext"]),
                 }),
-                0x8: InstSCI8("e_addi", "VLE", ["RT", "RA", "SCIMM"]),
-                0x9: InstSCI8("e_addic", "VLE", ["RT", "RA", "SCIMM"]),
+                0x8: InstSCI8("e_addi", "VLE", ["RT", "RA", "SCI8"]),
+                0x9: InstSCI8("e_addic", "VLE", ["RT", "RA", "SCI8"]),
                 0xA: Level(20, 21, {
-                    0: InstSCI8("e_mulli", "VLE", ["RT", "RA", "SCIMM"]),
+                    0: InstSCI8("e_mulli", "VLE", ["RT", "RA", "SCI8"]),
                     1: Level(6, 7, {
-                        0: InstSCI8("e_cmpi", "VLE", ["BF32", "RA", "SCIMM"]),
-                        1: InstSCI8("e_cmpli", "VLE", ["BF32", "RA", "SCIMM"]),
+                        0: InstSCI8("e_cmpi", "VLE", ["BF32", "RA", "SCI8"]),
+                        1: InstSCI8("e_cmpli", "VLE", ["BF32", "RA", "SCI8"]),
                     }),
                 }),
-                0xB: InstSCI8("e_subfic", "VLE", ["RT", "RA", "SCIMM"]),
-                0xC: InstSCI8("e_andi", "VLE", ["RT", "RS", "SCIMM"]),
-                0xD: InstSCI8("e_ori", "VLE", ["RA", "RS", "SCIMM"]),
-                0xE: InstSCI8("e_xori", "VLE", ["RA", "RS", "SCIMM"]),
+                0xB: InstSCI8("e_subfic", "VLE", ["RT", "RA", "SCI8"]),
+                0xC: InstSCI8("e_andi", "VLE", ["RT", "RS", "SCI8"]),
+                0xD: InstSCI8("e_ori", "VLE", ["RA", "RS", "SCI8"]),
+                0xE: InstSCI8("e_xori", "VLE", ["RA", "RS", "SCI8"]),
             }),
             0b11: InstD("e_add16i", "VLE", ["RT", "RA", "SI-sext"]),
         }),
@@ -244,8 +246,8 @@ class Decoder:
                 1: InstM("e_rlwinm", "VLE", ["RA", "RS", "SH", "MB", "ME"]),
             }),
             0b011110: Level(6, 7, {
-                0: InstBD24("e_b", "VLE", ["NIA"]),
-                1: InstBD15("e_bc", "VLE", ["NIA"]),
+                0: InstBD24("e_b", "VLE", ["NIA"], branch=True),
+                1: InstBD15("e_bc", "VLE", ["NIA"], conditional_branch=True),
             }),
         }),
         
@@ -257,8 +259,8 @@ class Decoder:
         0xD: InstSD4("se_stw", "VLE", ["RZ", "RX", "SD4-sext"]),
 
         0xE: Level(4, 5, {
-            0: InstBD8("se_bc", "VLE", ["NIA"]),
-            1: InstBD8("se_b", "VLE", ["NIA"]),
+            0: InstBD8("se_bc", "VLE", ["NIA"], conditional_branch=True),
+            1: InstBD8("se_b", "VLE", ["NIA"], branc=True),
         })
     })
 
@@ -269,12 +271,16 @@ class Decoder:
 
     def __init__(self, categories: PowerCategory = None):
         self.map = Decoder.VLE_INST_TABLE.map()
+        self.x64 = PowerCategory.X64 in categories
         for cat in PowerCategory:
             if cat != PowerCategory.VLE and cat in categories:
                 self.map = self.VLE_INST_EXTRA[cat].map(self.map)
 
-    def decode(self, data: bytes) -> Instruction | None:
+    def __call__(self, data: bytes, addr: int = 0) -> Instruction | None:
+        return self.decode(data, addr)
+
+    def decode(self, data: bytes, addr: int = 0) -> Instruction | None:
         target = int.from_bytes(data[:4] if len(data) >= 4 else data + b'\0\0', 'big')
         instruction = self.map.decode(target)
         if instruction and len(data) >= instruction.length:
-            return instruction
+            return instruction(target, addr, self.x64)
