@@ -286,6 +286,9 @@ class PowerVLE(Architecture):
             elif operand == "BF32":
                 token = (InstructionTextTokenType.RegisterToken, f"cr{instruction.BF32}")
 
+            elif operand == "NIA":
+                token = (InstructionTextTokenType.CodeRelativeAddressToken, hex(instruction.NIA), instruction.NIA)
+
             else:
                 opr = instruction.get(operand)
                 if opr == None:
