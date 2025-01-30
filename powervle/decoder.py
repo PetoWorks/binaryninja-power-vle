@@ -112,10 +112,10 @@ class Decoder:
                     0x0: InstC("se_illegal", "VLE", []),
                     0x1: InstC("se_isync", "VLE", []),
                     0x2: InstC("se_sc", "VLE", []),
-                    0x4: InstC("se_blr", "VLE", [], branch=True),
-                    0x5: InstC("se_blr", "VLE", [], branch=True),
-                    0x6: InstC("se_bctr", "VLE", [], branch=True),
-                    0x7: InstC("se_bctr", "VLE", [], branch=True),
+                    0x4: InstC("se_blr", "VLE", ["LK"], branch=True),
+                    0x5: InstC("se_blr", "VLE", ["LK"], branch=True),
+                    0x6: InstC("se_bctr", "VLE", ["LK"], branch=True),
+                    0x7: InstC("se_bctr", "VLE", ["LK"], branch=True),
                     0x8: InstC("se_rfi", "VLE", []),
                     0x9: InstC("se_rfci", "VLE", []),
                     0xA: InstC("se_rfdi", "VLE", []),
@@ -158,8 +158,8 @@ class Decoder:
                     0x8: InstD8("e_lmw", "VLE", ["RT", "RA", "D8-sext"]),
                     0x9: InstD8("e_stmw", "VLE", ["RS", "RA", "D8-sext"]),
                 }),
-                0x8: InstSCI8("e_addi", "VLE", ["RT", "RA", "SCI8"]),
-                0x9: InstSCI8("e_addic", "VLE", ["RT", "RA", "SCI8"]),
+                0x8: InstSCI8("e_addi", "VLE", ["RT", "RA", "SCI8", "Rc"]),
+                0x9: InstSCI8("e_addic", "VLE", ["RT", "RA", "SCI8", "Rc"]),
                 0xA: Level(20, 21, {
                     0: InstSCI8("e_mulli", "VLE", ["RT", "RA", "SCI8"]),
                     1: Level(6, 7, {
@@ -167,10 +167,10 @@ class Decoder:
                         1: InstSCI8("e_cmpli", "VLE", ["BF32", "RA", "SCI8"]),
                     }),
                 }),
-                0xB: InstSCI8("e_subfic", "VLE", ["RT", "RA", "SCI8"]),
-                0xC: InstSCI8("e_andi", "VLE", ["RT", "RS", "SCI8"]),
-                0xD: InstSCI8("e_ori", "VLE", ["RA", "RS", "SCI8"]),
-                0xE: InstSCI8("e_xori", "VLE", ["RA", "RS", "SCI8"]),
+                0xB: InstSCI8("e_subfic", "VLE", ["RT", "RA", "SCI8", "Rc"]),
+                0xC: InstSCI8("e_andi", "VLE", ["RT", "RS", "SCI8", "Rc"]),
+                0xD: InstSCI8("e_ori", "VLE", ["RA", "RS", "SCI8", "Rc"]),
+                0xE: InstSCI8("e_xori", "VLE", ["RA", "RS", "SCI8", "Rc"]),
             }),
             0b11: InstD("e_add16i", "VLE", ["RT", "RA", "SI-sext"]),
         }),
@@ -178,8 +178,8 @@ class Decoder:
         0x2: Level(0, 7, { # opcode bits with XO/RC bit (inst[0:7])
             0b0010000: InstOIM5("se_addi", "VLE", ["RX", "OIMM"]),
             0b0010001: InstOIM5("se_cmpli", "VLE", ["RX", "OIMM"]),
-            0b0010010: InstOIM5("se_subi", "VLE", ["RX", "OIMM"]),
-            0b0010011: InstOIM5("se_subi", "VLE", ["RX", "OIMM"]),
+            0b0010010: InstOIM5("se_subi", "VLE", ["RX", "OIMM", "Rc"]),
+            0b0010011: InstOIM5("se_subi", "VLE", ["RX", "OIMM", "Rc"]),
             0b0010101: InstIM5("se_cmpi", "VLE", ["RX", "UI5"]),
             0b0010110: InstIM5("se_bmaski", "VLE", ["RX", "UI5"]),
             0b0010111: InstIM5("se_andi", "VLE", ["RX", "UI5"]),
@@ -200,8 +200,8 @@ class Decoder:
             0b01: Level(4, 8, { # ... continued
                 0x4: InstRR("se_or", "VLE", ["RX", "RY"]),
                 0x5: InstRR("se_andc", "VLE", ["RX", "RY"]),
-                0x6: InstRR("se_and", "VLE", ["RX", "RY"]),
-                0x7: InstRR("se_and", "VLE", ["RX", "RY"]),
+                0x6: InstRR("se_and", "VLE", ["RX", "RY", "Rc"]),
+                0x7: InstRR("se_and", "VLE", ["RX", "RY", "Rc"]),
             }),
             0b10: InstIM7("se_li", "VLE", ["RX", "UI7"]),
         }),
@@ -246,8 +246,8 @@ class Decoder:
                 1: InstM("e_rlwinm", "VLE", ["RA", "RS", "SH", "MB", "ME"]),
             }),
             0b011110: Level(6, 7, {
-                0: InstBD24("e_b", "VLE", ["NIA"], branch=True),
-                1: InstBD15("e_bc", "VLE", ["NIA"], conditional_branch=True),
+                0: InstBD24("e_b", "VLE", ["NIA", "LK"], branch=True),
+                1: InstBD15("e_bc", "VLE", ["NIA", "LK"], conditional_branch=True),
             }),
         }),
         
@@ -260,7 +260,7 @@ class Decoder:
 
         0xE: Level(4, 5, {
             0: InstBD8("se_bc", "VLE", ["NIA"], conditional_branch=True),
-            1: InstBD8("se_b", "VLE", ["NIA"], branc=True),
+            1: InstBD8("se_b", "VLE", ["NIA", "LK"], branc=True),
         })
     })
 

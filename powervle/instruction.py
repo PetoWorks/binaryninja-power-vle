@@ -50,10 +50,10 @@ class Instruction:
         if self.conditional_branch:
             mnemonic = self.name[:-1] + self.branch_condition
 
-        if "LK" in self.fields:
+        if "LK" in self.operands:
             mnemonic += "l" if self.LK else ""
 
-        if "Rc" in self.fields:
+        if "Rc" in self.operands:
             mnemonic += "." if self.Rc else ""
 
         return mnemonic
@@ -146,6 +146,7 @@ def InstOIM5(name: str, category: str, operands: list[str | bytes | int], **othe
     return Inst(name, category, 2, {
         "OPCD": (0, 6),
         "XO": (6, 7),
+        "Rc": (6, 7),
         "OIM5": (7, 12),
         "RX": (12, 16),
         "OIMM": lambda s: s.OIM5 + 1
