@@ -221,13 +221,13 @@ class PowerVLE(Architecture):
 
         if instruction.branch:
 
-            if "NIA" in instruction.fields:
+            if "NIA" in instruction.operands:
                 nia = instruction.NIA
                 if nia != (addr + instruction.length):
                     info.add_branch(BranchType.CallDestination if instruction.LK else BranchType.UnconditionalBranch, nia)
                     return info
             
-            elif "LK" not in instruction.fields:
+            elif not instruction.LK:
 
                 if instruction.name == "se_blr":
                     info.add_branch(BranchType.FunctionReturn)
@@ -260,9 +260,14 @@ class PowerVLE(Architecture):
         mnemonic = instruction.mnemonic
         tokens.append(InstructionTextToken(InstructionTextTokenType.InstructionToken, mnemonic))
 
+        skipped = 0
         for index, operand in enumerate(instruction.operands):
 
-            if index == 0:
+            if operand in ("Rc", "LK"):
+                skipped += 1
+                continue
+
+            if (index - skipped) == 0:
                 tokens.append(InstructionTextToken(InstructionTextTokenType.TextToken, " " * (12 - len(mnemonic))))
             else:
                 tokens.append(InstructionTextToken(InstructionTextTokenType.OperandSeparatorToken, ", "))
