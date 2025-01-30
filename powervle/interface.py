@@ -19,6 +19,7 @@ from binaryninja.enums import (
 )
 
 from .decoder import Decoder, PowerCategory
+from .lowlevelil import InstLiftTable
 from .utils import *
 
 
@@ -313,7 +314,11 @@ class PowerVLE(Architecture):
         if not instruction:
             return 4
 
-        il.unimplemented()
+        if instruction.name in InstLiftTable and InstLiftTable[instruction.name]:
+            InstLiftTable[instruction.name](instruction, il)
+        else:
+            il.unimplemented()
+
         return instruction.length
 
     def get_flag_write_low_level_il(
