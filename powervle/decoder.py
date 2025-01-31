@@ -148,47 +148,47 @@ class Decoder:
         0x1: Level(4, 6, { # opcode secondary bits level (inst[4:6])
             0b10: Level(16, 20, { # extra opcode primary bits level (inst[16:20])
                 0x0: Level(20, 24, { # extra opcode secondary bits level (inst[20:24])
-                    0x0: InstD8("e_lbzu", "VLE", ["RT", "RA", "D8-sext"]),
-                    0x1: InstD8("e_lhzu", "VLE", ["RT", "RA", "D8-sext"]),
-                    0x2: InstD8("e_lwzu", "VLE", ["RT", "RA", "D8-sext"]),
-                    0x3: InstD8("e_lhau", "VLE", ["RT", "RA", "D8-sext"]),
-                    0x4: InstD8("e_stbu", "VLE", ["RS", "RA", "D8-sext"]),
-                    0x5: InstD8("e_sthu", "VLE", ["RS", "RA", "D8-sext"]),
-                    0x6: InstD8("e_stwu", "VLE", ["RS", "RA", "D8-sext"]),
-                    0x8: InstD8("e_lmw", "VLE", ["RT", "RA", "D8-sext"]),
-                    0x9: InstD8("e_stmw", "VLE", ["RS", "RA", "D8-sext"]),
+                    0x0: InstD8("e_lbzu", "VLE", ["RT", "RA", "D8"]),
+                    0x1: InstD8("e_lhzu", "VLE", ["RT", "RA", "D8"]),
+                    0x2: InstD8("e_lwzu", "VLE", ["RT", "RA", "D8"]),
+                    0x3: InstD8("e_lhau", "VLE", ["RT", "RA", "D8"]),
+                    0x4: InstD8("e_stbu", "VLE", ["RS", "RA", "D8"]),
+                    0x5: InstD8("e_sthu", "VLE", ["RS", "RA", "D8"]),
+                    0x6: InstD8("e_stwu", "VLE", ["RS", "RA", "D8"]),
+                    0x8: InstD8("e_lmw", "VLE", ["RT", "RA", "D8"]),
+                    0x9: InstD8("e_stmw", "VLE", ["RS", "RA", "D8"]),
                 }),
-                0x8: InstSCI8("e_addi", "VLE", ["RT", "RA", "SCI8", "Rc"]),
-                0x9: InstSCI8("e_addic", "VLE", ["RT", "RA", "SCI8", "Rc"]),
+                0x8: InstSCI8("e_addi", "VLE", ["RT", "RA", "sci8", "Rc"]),
+                0x9: InstSCI8("e_addic", "VLE", ["RT", "RA", "sci8", "Rc"]),
                 0xA: Level(20, 21, {
-                    0: InstSCI8("e_mulli", "VLE", ["RT", "RA", "SCI8"]),
+                    0: InstSCI8("e_mulli", "VLE", ["RT", "RA", "sci8"]),
                     1: Level(6, 7, {
-                        0: InstSCI8("e_cmpi", "VLE", ["BF32", "RA", "SCI8"]),
-                        1: InstSCI8("e_cmpli", "VLE", ["BF32", "RA", "SCI8"]),
+                        0: InstSCI8("e_cmpi", "VLE", ["BF32", "RA", "sci8"]),
+                        1: InstSCI8("e_cmpli", "VLE", ["BF32", "RA", "sci8"]),
                     }),
                 }),
-                0xB: InstSCI8("e_subfic", "VLE", ["RT", "RA", "SCI8", "Rc"]),
-                0xC: InstSCI8("e_andi", "VLE", ["RT", "RS", "SCI8", "Rc"]),
-                0xD: InstSCI8("e_ori", "VLE", ["RA", "RS", "SCI8", "Rc"]),
-                0xE: InstSCI8("e_xori", "VLE", ["RA", "RS", "SCI8", "Rc"]),
+                0xB: InstSCI8("e_subfic", "VLE", ["RT", "RA", "sci8", "Rc"]),
+                0xC: InstSCI8("e_andi", "VLE", ["RT", "RS", "sci8", "Rc"]),
+                0xD: InstSCI8("e_ori", "VLE", ["RA", "RS", "sci8", "Rc"]),
+                0xE: InstSCI8("e_xori", "VLE", ["RA", "RS", "sci8", "Rc"]),
             }),
-            0b11: InstD("e_add16i", "VLE", ["RT", "RA", "SI-sext"]),
+            0b11: InstD("e_add16i", "VLE", ["RT", "RA", "SI"]),
         }),
 
         0x2: Level(0, 7, { # opcode bits with XO/RC bit (inst[0:7])
-            0b0010000: InstOIM5("se_addi", "VLE", ["RX", "OIMM"]),
-            0b0010001: InstOIM5("se_cmpli", "VLE", ["RX", "OIMM"]),
-            0b0010010: InstOIM5("se_subi", "VLE", ["RX", "OIMM", "Rc"]),
-            0b0010011: InstOIM5("se_subi", "VLE", ["RX", "OIMM", "Rc"]),
+            0b0010000: InstOIM5("se_addi", "VLE", ["RX", "oimm"]),
+            0b0010001: InstOIM5("se_cmpli", "VLE", ["RX", "oimm"]),
+            0b0010010: InstOIM5("se_subi", "VLE", ["RX", "oimm", "Rc"]),
+            0b0010011: InstOIM5("se_subi", "VLE", ["RX", "oimm", "Rc"]),
             0b0010101: InstIM5("se_cmpi", "VLE", ["RX", "UI5"]),
             0b0010110: InstIM5("se_bmaski", "VLE", ["RX", "UI5"]),
             0b0010111: InstIM5("se_andi", "VLE", ["RX", "UI5"]),
         }),
 
         0x3: Level(0, 6, { # opcode bits level (inst[0:6])
-            0b001100: InstD("e_lbz", "VLE", ["RT", "RA", "D-sext"]),
-            0b001101: InstD("e_stb", "VLE", ["RS", "RA", "D-sext"]),
-            0b001110: InstD("e_lha", "VLE", ["RT", "RA", "D-sext"]),
+            0b001100: InstD("e_lbz", "VLE", ["RT", "RA", "D"]),
+            0b001101: InstD("e_stb", "VLE", ["RS", "RA", "D"]),
+            0b001110: InstD("e_lha", "VLE", ["RT", "RA", "D"]),
         }),
 
         0x4: Level(4, 6, { # secondary opcode level (inst[4:6])
@@ -207,10 +207,10 @@ class Decoder:
         }),
 
         0x5: Level(0, 6, { # opcode bits level (inst[0:6])
-            0b010100: InstD("e_lwz", "VLE", ["RT", "RA", "D-sext"]),
-            0b010101: InstD("e_stw", "VLE", ["RS", "RA", "D-sext"]),
-            0b010110: InstD("e_lhz", "VLE", ["RT", "RA", "D-sext"]),
-            0b010111: InstD("e_sth", "VLE", ["RS", "RA", "D-sext"]),
+            0b010100: InstD("e_lwz", "VLE", ["RT", "RA", "D"]),
+            0b010101: InstD("e_stw", "VLE", ["RS", "RA", "D"]),
+            0b010110: InstD("e_lhz", "VLE", ["RT", "RA", "D"]),
+            0b010111: InstD("e_sth", "VLE", ["RS", "RA", "D"]),
         }),
 
         0x6: Level(0, 7, { # opcode bits level with XO bit (inst[0:7])
@@ -227,12 +227,12 @@ class Decoder:
             0b011100: Level(16, 17, { # first XO bit (inst[16:17])
                 0: InstLI20("e_li", "VLE", ["RT", "LI20"]),
                 1: Level(17, 21, { # last XO bits (inst[17:21])
-                    0b0001: InstI16A("e_add2i.", "VLE", ["RA", "SI-sext"]),
-                    0b0010: InstI16A("e_add2is", "VLE", ["RA", "SI-sext"]),
-                    0b0011: InstI16A("e_cmp16i", "VLE", ["RA", "SI-sext"]),
-                    0b0100: InstI16A("e_mull2i", "VLE", ["RA", "SI-sext"]),
+                    0b0001: InstI16A("e_add2i.", "VLE", ["RA", "SI"]),
+                    0b0010: InstI16A("e_add2is", "VLE", ["RA", "SI"]),
+                    0b0011: InstI16A("e_cmp16i", "VLE", ["RA", "SI"]),
+                    0b0100: InstI16A("e_mull2i", "VLE", ["RA", "SI"]),
                     0b0101: InstI16A("e_cmpl16i", "VLE", ["RA", "UI"]),
-                    0b0110: InstI16A("e_cmph16i", "VLE", ["RA", "SI-sext"]),
+                    0b0110: InstI16A("e_cmph16i", "VLE", ["RA", "SI"]),
                     0b0111: InstI16A("e_cmphl16i", "VLE", ["RA", "UI"]),
                     0b1000: InstI16L("e_or2i", "VLE", ["RT", "UI"]),
                     0b1001: InstI16L("e_and2i.", "VLE", ["RT", "UI"]),
@@ -246,21 +246,21 @@ class Decoder:
                 1: InstM("e_rlwinm", "VLE", ["RA", "RS", "SH", "MB", "ME"]),
             }),
             0b011110: Level(6, 7, {
-                0: InstBD24("e_b", "VLE", ["NIA", "LK"], branch=True),
-                1: InstBD15("e_bc", "VLE", ["NIA", "LK"], conditional_branch=True),
+                0: InstBD24("e_b", "VLE", ["target_addr", "LK"], branch=True),
+                1: InstBD15("e_bc", "VLE", ["BI32", "target_addr", "LK"], conditional_branch=True),
             }),
         }),
         
-        0x8: InstSD4("se_lbz", "VLE", ["RZ", "RX", "SD4-sext"]),
-        0x9: InstSD4("se_stb", "VLE", ["RZ", "RX", "SD4-sext"]),
-        0xA: InstSD4("se_lhz", "VLE", ["RZ", "RX", "SD4-sext"]),
-        0xB: InstSD4("se_sth", "VLE", ["RZ", "RX", "SD4-sext"]),
-        0xC: InstSD4("se_lwz", "VLE", ["RZ", "RX", "SD4-sext"]),
-        0xD: InstSD4("se_stw", "VLE", ["RZ", "RX", "SD4-sext"]),
+        0x8: InstSD4("se_lbz", "VLE", ["RZ", "RX", "SD4"]),
+        0x9: InstSD4("se_stb", "VLE", ["RZ", "RX", "SD4"]),
+        0xA: InstSD4("se_lhz", "VLE", ["RZ", "RX", "SD4"]),
+        0xB: InstSD4("se_sth", "VLE", ["RZ", "RX", "SD4"]),
+        0xC: InstSD4("se_lwz", "VLE", ["RZ", "RX", "SD4"]),
+        0xD: InstSD4("se_stw", "VLE", ["RZ", "RX", "SD4"]),
 
         0xE: Level(4, 5, {
-            0: InstBD8("se_bc", "VLE", ["NIA"], conditional_branch=True),
-            1: InstBD8("se_b", "VLE", ["NIA", "LK"], branc=True),
+            0: InstBD8("se_bc", "VLE", ["BI16", "target_addr"], conditional_branch=True),
+            1: InstBD8("se_b", "VLE", ["target_addr", "LK"], branch=True),
         })
     })
 
