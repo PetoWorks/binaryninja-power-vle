@@ -219,34 +219,40 @@ class PowerVLE(Architecture):
 
         info.length = instruction.length
 
-        if instruction.branch:
+        if not (instruction.branch or instruction.conditional_branch):
+            return info
 
-            if "NIA" in instruction.operands:
-                nia = instruction.NIA
-                if nia != (addr + instruction.length):
-                    info.add_branch(BranchType.CallDestination if instruction.LK else BranchType.UnconditionalBranch, nia)
-                    return info
-            
-            elif not instruction.LK:
+        target_addr = instruction.get_operand_value("target_addr")
+        link = instruction.get_operand_value("LK")
 
+        if target_addr == None:
+
+            if link == 0:
                 if instruction.name == "se_blr":
                     info.add_branch(BranchType.FunctionReturn)
-                    return info
-                
                 elif instruction.name == "se_bctr":
                     info.add_branch(BranchType.IndirectBranch)
-                    return info
+                return info
 
             info.add_branch(BranchType.UnresolvedBranch)
             return info
         
-        elif instruction.conditional_branch:
-            nia = instruction.NIA
-            if nia != (addr + instruction.length):
-                info.add_branch(BranchType.TrueBranch, nia)
-                info.add_branch(BranchType.FalseBranch, addr + instruction.length)
-                return info
+        if target_addr == (addr + instruction.length):
+            return info
         
+        if instruction.branch:
+            if link:
+                info.add_branch(BranchType.CallDestination, target_addr)
+            else:
+                info.add_branch(BranchType.UnconditionalBranch, target_addr)
+        
+        elif instruction.conditional_branch:
+            if link:
+                info.add_branch(BranchType.UnresolvedBranch, target_addr)
+            else:
+                info.add_branch(BranchType.TrueBranch, target_addr)
+                info.add_branch(BranchType.FalseBranch, addr + instruction.length)
+
         return info
 
     def get_instruction_text(self, data: bytes, addr: int) -> Tuple[List[InstructionTextToken], int] | None:
@@ -258,50 +264,30 @@ class PowerVLE(Architecture):
         tokens = []
 
         mnemonic = instruction.mnemonic
-        tokens.append(InstructionTextToken(InstructionTextTokenType.InstructionToken, mnemonic))
+        tokens.append(InstructionTextToken(InstructionTextTokenType.InstructionToken, instruction.mnemonic))
 
         skipped = 0
-        for index, operand in enumerate(instruction.operands):
+        for index, name in enumerate(instruction.operands):
 
-            if operand in ("Rc", "LK"):
+            if name in ("Rc", "LK"):
                 skipped += 1
                 continue
 
             if (index - skipped) == 0:
-                tokens.append(InstructionTextToken(InstructionTextTokenType.TextToken, " " * (12 - len(mnemonic))))
+                tokens.append(InstructionTextToken(InstructionTextTokenType.TextToken, " " * (9 - len(mnemonic))))
             else:
                 tokens.append(InstructionTextToken(InstructionTextTokenType.OperandSeparatorToken, ", "))
-
-            if operand in ("RA", "RT", "RS"):
-                regnum = instruction.get(operand)
-                token = (InstructionTextTokenType.RegisterToken, f"r{regnum}")
-
-            elif operand in ("ARX", "ARY"):
-                regnum = 8 + instruction.get(operand)
-                token = (InstructionTextTokenType.RegisterToken, f"r{regnum}")
-
-            elif operand in ("RX", "RY", "RZ"):
-                value = instruction.get(operand)
-                if value < 0b1000:
-                    regnum = value
-                else:
-                    regnum = 24 + (value & 0b111)
-                token = (InstructionTextTokenType.RegisterToken, f"r{regnum}")
-
-            elif operand == "BF32":
-                token = (InstructionTextTokenType.RegisterToken, f"cr{instruction.BF32}")
-
-            elif operand == "NIA":
-                token = (InstructionTextTokenType.CodeRelativeAddressToken, hex(instruction.NIA), instruction.NIA)
-
+            
+            operand = instruction.get_operand_value(name)
+            if operand == None:
+                log_warn(f"instruction {instruction.name} has invalid operand {name}")
+                token = (InstructionTextTokenType.TextToken, f"#INVALID({name})")
+            elif name == "target_addr":
+                token = (InstructionTextTokenType.CodeRelativeAddressToken, hex(operand), operand)
+            elif type(operand) == str:
+                token = (InstructionTextTokenType.RegisterToken, operand)
             else:
-                opr = instruction.get(operand)
-                if opr == None:
-                    log_warn(f"There are unimplemented field: {mnemonic} {operand}")
-                    log_debug(f"{instruction.name} {instruction.fields}")
-                    token = (InstructionTextTokenType.TextToken, "#UNAVAILABLE")
-                else:
-                    token = (InstructionTextTokenType.IntegerToken, hex(opr), opr)
+                token = (InstructionTextTokenType.IntegerToken, hex(operand), operand)
 
             tokens.append(InstructionTextToken(*token))
 

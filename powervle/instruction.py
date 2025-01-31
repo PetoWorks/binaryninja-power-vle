@@ -1,4 +1,3 @@
-from typing import Callable
 from .utils import *
 
 
@@ -15,10 +14,10 @@ class Instruction:
     name: str
     category: str
     length: int
-    fields: dict[str, tuple[int, int] | Callable]
+    fields: dict[str, tuple[int, int]]
     operands: list[str]
-    branch: bool
-    conditional_branch: bool
+    branch: bool = False
+    conditional_branch: bool = False
 
     _bcmap = (
         ("ge", "le", "ne", "ns", "dnz"),
@@ -30,45 +29,95 @@ class Instruction:
         self.addr = addr
         self.x64 = x64
 
-    def __getattr__(self, key: str):
-        return self.get(key)
-
-    def get(self, name: str) -> int | None:
-        if name not in self.fields:
-            return
-        field = self.fields[name]
-        if type(field) == tuple:
+    def get_field_value(self, name: str) -> int | None:
+        if (field := self.fields.get(name, None)) != None:
             return get_bits_from_int(self.data, self.length * 8, *field)
-        else:
-            return field(self)
+
+    def get_operand_value(self, name: str) -> int | str | None:
+        if name in self.operands:
+            if (value := self.get_field_value(name)) == None:
+                return self.get_extended_operand_value(name)
+            if name in ("RA", "RB", "RT", "RS"):
+                return f"r{value}"
+            elif name in ("RX", "RY", "RZ"):
+                regnum = value & 0b111
+                if value & 0b1000:
+                    regnum += 24
+                return f"r{regnum}"
+            elif name in ("ARX", "ARY"):
+                return f"r{8 + value}"
+            elif name == "BF32":
+                return f"cr{value}"
+            elif name == "BI32":
+                return f"cr{value >> 3}"
+            elif name == "BI16":
+                return f"cr0"
+            elif name == "SD4":
+                opcd = self.get_field_value("OPCD")
+                if opcd == 8: # se_lbz
+                    return value
+                elif opcd == 9: # se_stb
+                    return sign_extend(value, 4)
+                elif opcd == 10: # se_lhz
+                    return value << 1
+                elif opcd == 11: # se_sth
+                    return value << 1
+                elif opcd == 12: # se_lwz
+                    return value << 2
+                elif opcd == 13: # se_stw
+                    return value << 2
+                return value
+            elif name == "D8":
+                return sign_extend(value, 8)
+            elif name in ("SI", "D"):
+                return sign_extend(value, 16)
+            else:
+                return value
+    
+    def get_extended_operand_value(self, name: str) -> int | str | None:
+        if name == "target_addr":
+            if (bd8 := self.get_field_value("BD8")) != None:
+                offset = sign_extend(bd8 << 1, 9)
+            elif (bd15 := self.get_field_value("BD15")) != None:
+                offset = sign_extend(bd15 << 1, 16)
+            elif (bd24 := self.get_field_value("BD24")) != None:
+                offset = sign_extend(bd24 << 1, 25)
+            else:
+                return None
+            return mask(self.addr + offset, 64 if self.x64 else 32)
+        elif name == "oimm":
+            return self.get_field_value("OIM5") + 1
+        elif name == "sci8":
+            F = self.get_field_value("F")
+            SCL = self.get_field_value("SCL")
+            UI8 = self.get_field_value("UI8")
+            if None not in (F, SCL, UI8):
+                return scimm(F, SCL, UI8)
+        elif name == "LI20":
+            li20 = self.get_field_value("li20")
+            if li20 != None:
+                return sign_extend(li20, 20)
 
     @property
     def mnemonic(self) -> str:
-
-        mnemonic = self.name
-
+        ext, mnemonic = self.name.split("_")
         if self.conditional_branch:
-            mnemonic = self.name[:-1] + self.branch_condition
-
+            mnemonic = mnemonic[:-1] + self.branch_condition
         if "LK" in self.operands:
-            mnemonic += "l" if self.LK else ""
-
+            mnemonic += "l" if self.get_operand_value("LK") else ""
         if "Rc" in self.operands:
-            mnemonic += "." if self.Rc else ""
-
+            mnemonic += "." if self.get_operand_value("Rc") else ""
         return mnemonic
-    
+
     @property
     def branch_condition(self) -> str | None:
         if self.conditional_branch:
-            if ("BO32" in self.fields) and ("BI32" in self.fields):
-                bo32 = self.BO32
-                if bo32 >= 2:
-                    return self._bcmap[bo32 - 2][4]
-                else:
-                    return self._bcmap[bo32][self.BI32 % 4]
-            elif ("BO16" in self.fields) and ("BI16" in self.fields):
-                return self._bcmap[self.BO16][self.BI16]
+            if ((bo32 := self.get_field_value("BO32")) != None and 
+                (bi32 := self.get_field_value("BI32")) != None):
+                return self._bcmap[bo32 & 1][bi32 % 4 + ((bo32 & 2) << 1)]
+            elif ((bo16 := self.get_field_value("BO16")) != None and
+                  (bi16 := self.get_field_value("BI16")) != None):
+                return self._bcmap[bo16][bi16]
 
 
 def Inst(
@@ -79,10 +128,6 @@ def Inst(
     operands: list[str | bytes | int],
     **other
 ) -> type[Instruction]:
-
-    for opr in operands:
-        if opr not in fields:
-            raise ValueError(f"instrucion {name} has invalid operand: {opr}")
 
     return type(f"Inst_{name}", (Instruction, ), {
         "name": name,
@@ -102,7 +147,6 @@ def InstBD8(name: str, category: str, operands: list[str | bytes | int], **other
         "XO": (6, 7),
         "LK": (7, 8),
         "BD8": (8, 16),
-        "NIA": lambda s: mask(s.addr + sign_extend(s.BD8 << 1, 9), 64 if s.x64 else 32)
     }, operands, **other)
 
 
@@ -113,7 +157,6 @@ def InstBD15(name: str, category: str, operands: list[str | bytes | int], **othe
         "BI32": (12, 16),
         "BD15": (16, 31),
         "LK": (31, 32),
-        "NIA": lambda s: mask(s.addr + sign_extend(s.BD15 << 1, 16), 64 if s.x64 else 32)
     }, operands, **other)
 
 
@@ -122,7 +165,6 @@ def InstBD24(name: str, category: str, operands: list[str | bytes | int], **othe
         "OPCD": (0, 6),
         "BD24": (7, 31),
         "LK": (31, 32),
-        "NIA": lambda s: mask(s.addr + sign_extend(s.BD24 << 1, 25), 64 if s.x64 else 32)
     }, operands, **other)
 
 
@@ -149,7 +191,6 @@ def InstOIM5(name: str, category: str, operands: list[str | bytes | int], **othe
         "Rc": (6, 7),
         "OIM5": (7, 12),
         "RX": (12, 16),
-        "OIMM": lambda s: s.OIM5 + 1
     }, operands, **other)
 
 
@@ -187,7 +228,6 @@ def InstSD4(name: str, category: str, operands: list[str | bytes | int], **other
         "SD4": (4, 8),
         "RZ": (8, 12),
         "RX": (12, 16),
-        "SD4-sext": lambda s: sign_extend(s.SD4, 4)
     }, operands, **other)
 
 
@@ -205,8 +245,6 @@ def InstD(name: str, category: str, operands: list[str | bytes | int], **other) 
         "D": (16, 32),
         "SI": (16, 32),
         "UI": (16, 32),
-        "SI-sext": lambda s: sign_extend(s.SI, 16),
-        "D-sext": lambda s: sign_extend(s.D, 16),
     }, operands, **other)
 
 
@@ -218,22 +256,16 @@ def InstD8(name: str, category: str, operands: list[str | bytes | int], **other)
         "RA": (11, 16),
         "XO": (16, 24),
         "D8": (24, 32),
-        "D8-sext": lambda s: sign_extend(s.D8, 8)
     }, operands, **other)
 
 
 def InstI16A(name: str, category: str, operands: list[str | bytes | int], **other) -> type[Instruction]:
     return Inst(name, category, 4, {
         "OPCD": (0, 6),
-        "SI_6": (6, 11),
-        "UI_6": (6, 11),
         "RA": (11, 16),
         "XO": (16, 21),
-        "SI_21": (21, 32),
-        "UI_21": (21, 32),
-        "SI": lambda s: (s.SI_6 << 11) | s.SI_21,
-        "UI": lambda s: (s.UI_6 << 11) | s.UI_21,
-        "SI-sext": lambda s: sign_extend(s.SI, 16)
+        "SI": ((6, 11, 11), (21, 32, 0)),
+        "UI": ((6, 11, 11), (21, 32, 0)),
     }, operands, **other)
 
 
@@ -241,10 +273,8 @@ def InstI16L(name: str, category: str, operands: list[str | bytes | int], **othe
     return Inst(name, category, 4, {
         "OPCD": (0, 6),
         "RT": (6, 11),
-        "UI_11": (11, 16),
         "XO": (16, 21),
-        "UI_21": (21, 32),
-        "UI": lambda s: (s.UI_11 << 11) | s.UI_21,
+        "UI": ((11, 16, 11), (21, 32, 0))
     }, operands, **other)
 
 
@@ -276,7 +306,6 @@ def InstSCI8(name: str, category: str, operands: list[str | bytes | int], **othe
         "F": (21, 22),
         "SCL": (22, 24),
         "UI8": (24, 32),
-        "SCI8": lambda s: sign_extend(scimm(s.F, s.SCL, s.UI8), 64 if s.x64 else 32)
     }, operands, **other)
 
 
@@ -284,10 +313,6 @@ def InstLI20(name: str, category: str, operands: list[str | bytes | int], **othe
     return Inst(name, category, 4, {
         "OPCD": (0, 6),
         "RT": (6, 11),
-        "LI20_11": (11, 16),
         "XO": (16, 17),
-        "LI20_17": (17, 21),
-        "LI20_21": (21, 32),
-        "LI20": lambda s: (s.LI20_17 << 16) | (s.LI20_11 << 11) | s.LI20_21,
-        "LI20-sext": lambda s: sign_extend(s.LI20, 20)
+        "li20": ((17, 21, 16), (11, 16, 11), (21, 32, 0))
     }, operands, **other)
