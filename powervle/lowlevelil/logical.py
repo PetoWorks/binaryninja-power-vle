@@ -1,6 +1,7 @@
 from binaryninja.lowlevelil import LowLevelILFunction
 from ..instruction import Instruction
 
+
 def lift_logical_instructions(inst: Instruction, il: LowLevelILFunction) -> None:
     for i in range(len(inst.operands)):
         if i == 0:   oper_0 = inst.operands[0]
@@ -22,7 +23,7 @@ def lift_logical_instructions(inst: Instruction, il: LowLevelILFunction) -> None
         ei0 = il.set_reg(4, rt, ei0, 'cr0s')
         il.append(ei0)
     
-    elif inst.name == "e_andi": ## ra인데 rt라고 되어 있음 decoder.py 참조.
+    elif inst.name == "e_andi":
         assert len(inst.operands) == 4
         ra = inst.get_operand_value(oper_0)
         rs = inst.get_operand_value(oper_1)
