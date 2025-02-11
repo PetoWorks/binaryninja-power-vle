@@ -4,6 +4,7 @@ from binaryninja.lowlevelil import LowLevelILFunction
 
 from ..instruction import Instruction
 from .branch import lift_branch_instructions
+from .logical import lift_logical_instructions
 
 from .arithmetic import (lift_add_instructions,
                          lift_sub_instructions,
@@ -70,4 +71,30 @@ InstLiftTable: dict[str, InstLiftFuncType] = {
     "se_lwz" : lift_load_instructions,
     "e_lwzu" : lift_load_instructions
 
+    "e_and2i."   : lift_logical_instructions,
+    "e_and2is."  : lift_logical_instructions,
+    "e_andi"     : lift_logical_instructions,
+    "se_andi"    : lift_logical_instructions,
+    "e_or2i"     : lift_logical_instructions,
+    "e_or2is"    : lift_logical_instructions,
+    "e_ori"      : lift_logical_instructions,
+    "e_xori"     : lift_logical_instructions,
+    "se_and"     : lift_logical_instructions,
+    "se_andc"    : lift_logical_instructions,
+    "se_or"      : lift_logical_instructions,
+    "se_not"     : lift_logical_instructions,
+    "se_bclri"   : lift_logical_instructions,
+    "se_bgeni"   : lift_logical_instructions,
+    "se_bmaski"  : lift_logical_instructions,
+    "se_bseti"   : lift_logical_instructions,
+    "se_extsb"   : lift_logical_instructions,
+    "se_extsh"   : lift_logical_instructions,
+    "se_extzb"   : lift_logical_instructions,
+    "se_extzh"   : lift_logical_instructions,
+    "e_li"       : lift_logical_instructions,
+    "se_li"      : lift_logical_instructions,
+    "e_lis"      : lift_logical_instructions,
+    "se_mfar"    : lift_logical_instructions,
+    "se_mr"      : lift_logical_instructions,
+    "se_mtar"    : lift_logical_instructions,
 }
