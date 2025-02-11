@@ -69,7 +69,7 @@ InstLiftTable: dict[str, InstLiftFuncType] = {
     "e_lhzu" : lift_load_instructions,
     "e_lwz" : lift_load_instructions,
     "se_lwz" : lift_load_instructions,
-    "e_lwzu" : lift_load_instructions
+    "e_lwzu" : lift_load_instructions,
 
     "e_and2i."   : lift_logical_instructions,
     "e_and2is."  : lift_logical_instructions,
