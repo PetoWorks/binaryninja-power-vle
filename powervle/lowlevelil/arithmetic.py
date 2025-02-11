@@ -2,174 +2,128 @@ from binaryninja.lowlevelil import LowLevelILFunction
 from ..instruction import Instruction
 
 # 5.5 Fixed-Point Arithmetic Instructions
-def _handle_add_operation(il, op1, op2, dst, is_const=False, flags=None, record=False, shift=0):
-   if is_const:
-       op2_val = op2 << shift
-       result = il.add(4, il.reg(4, op1), il.const(4, op2_val), flags)
-   else:
-       result = il.add(4, il.reg(4, op1), il.reg(4, op2), flags)
-       
-   il.append(il.set_reg(4, dst, result, "cr0s" if record else None))
-   return result
-
 def lift_add_instructions(inst: Instruction, il: LowLevelILFunction) -> None:
-   add_instructions = {
-       "se_add": {              # Add Short Form
-           "op1": "RX",
-           "op2": "RY", 
-           "dst": "RX",
-           "is_const": False
-       },
-       "e_add16i": {            # Add immediate
-           "op1": "RA",
-           "op2": "SI",
-           "dst": "RT",
-           "is_const": True
-       },
-       "e_add2i": {             # Add (2 operand) Immediate and Record
-           "op1": "RA",
-           "op2": "SI",
-           "dst": "RA",
-           "is_const": True,
-           "record": True
-       },
-       "e_add2is": {            # Add (2 operand) Immediate Shifted
-           "op1": "RA",
-           "op2": "SI",
-           "dst": "RA",
-           "is_const": True,
-           "shift": 16
-       },
-       "e_addi": {              # Add Scaled Immediate
-           "op1": "RA",
-           "op2": "sci8",
-           "dst": "RT",
-           "is_const": True,
-           "record_field": "Rc"
-       },
-       "se_addi": {             # Add Immediate Short Form
-           "op1": "RX",
-           "op2": "oimm",
-           "dst": "RX",
-           "is_const": True
-       },
-       "e_addic": {             # Add Scaled Immediate Carrying
-           "op1": "RA",
-           "op2": "sci8",
-           "dst": "RT",
-           "is_const": True,
-           "flags": "xer_ca",
-           "record_field": "Rc"
-       }
-   }
-
-   if inst.name not in add_instructions:
-       il.append(il.unimplemented())
-       return
-
-   params = add_instructions[inst.name]
-   op1 = inst.get_operand_value(params["op1"])
-   op2 = inst.get_operand_value(params["op2"])
-   dst = inst.get_operand_value(params["dst"])
-   
-   record = False
-   if "record" in params:
-       record = params["record"]
-   elif "record_field" in params:
-       record = inst.get_operand_value(params["record_field"])
-
-   _handle_add_operation(
-       il, op1, op2, dst,
-       is_const=params.get("is_const", False),
-       flags=params.get("flags"),
-       record=record,
-       shift=params.get("shift", 0)
-   )
-
-def _handle_sub_operation(il, op1, op2, dst, is_const=0, flags=None, record=False):
-   if is_const:
-        if is_const == 1:
-            result = il.sub(4, il.const(4, op1), il.reg(4, op2), flags)
+    for i in range(len(inst.operands)):
+        if i == 0: oper_0 = inst.operands[0]
+        elif i == 1: oper_1 = inst.operands[1]
+        elif i == 2: oper_2 = inst.operands[2]
+        elif i == 3: oper_3 = inst.operands[3]
+    if inst.name == "se_add": # Add Short Form
+        assert len(inst.operands) == 2
+        rx = inst.get_operand_value(oper_0)
+        ry = inst.get_operand_value(oper_1)
+        ei0 = il.add(4, il.reg(4, rx), il.reg(4, ry))
+        ei0 = il.set_reg(4, rx, ei0)
+        il.append(ei0)
+    elif inst.name == "e_add16i": # Add immediate
+        assert len(inst.operands) == 3
+        rt = inst.get_operand_value(oper_0)
+        ra = inst.get_operand_value(oper_1)
+        si = inst.get_operand_value(oper_2)
+        ei0 = il.add(4, il.reg(4, ra), il.const(4, si))
+        ei0 = il.set_reg(4, rt, ei0)
+        il.append(ei0)
+    elif inst.name in ["e_add2i", "e_add2is"]:  # Add (2 operand) Immediate and Record
+                                                # Add (2 operand) Immediate Shifted
+        assert len(inst.operands) == 2
+        ra = inst.get_operand_value(oper_0)
+        si = inst.get_operand_value(oper_1)
+        if inst.name == "e_add2is":
+            ei0 = il.const(4, si << 16)
+            flags = None
         else:
-            result = il.sub(4, il.reg(4, op1), il.const(4, op2), flags)
-   else:
-       result = il.sub(4, il.reg(4, op1), il.reg(4, op2), flags)
-       
-   il.append(il.set_reg(4, dst, result, "cr0s" if record else None))
-   return result
-
-def lift_sub_instructions(inst: Instruction, il: LowLevelILFunction) -> None:
-    sub_instructions = {
-        "se_sub": {             # Subtract
-            "op1": "RX",
-            "op2": "RY",
-            "dst": "RX",
-        },
-        "se_subf": {            # Subtract From Short Form
-            "op1": "RY",
-            "op2": "RX",
-            "dst": "RX",
-        },
-        "e_subfic": {           # Subtract From Scaled Immediate Carrying
-            "op1": "sci8",
-            "op2": "RA",
-            "dst": "RT",
-            "is_const": 1,
-            "flags": "xer_ca",
-            "record_field": "Rc"
-        },
-        "se_subi": {            # Subtract Immediate
-            "op1": "RX",
-            "op2": "oimm",
-            "dst": "RX",
-            "is_const": 2,
-            "record_field": "Rc"
-        }
-    }
-    
-    if inst.name not in sub_instructions:
-        il.append(il.unimplemented())
-        return
-    
-    params = sub_instructions[inst.name]
-    op1 = inst.get_operand_value(params["op1"])
-    op2 = inst.get_operand_value(params["op2"])
-    dst = inst.get_operand_value(params["dst"])
-    
-    record = False
-    if "record_field" in params:
-        record = inst.get_operand_value(params["record_field"])
-    
-    _handle_sub_operation(
-        il, op1, op2, dst,
-        is_const=params.get("is_const", 0),
-        flags=params.get("flags"),
-        record=record,
-    )
-
-def lift_mul_instructions(inst: Instruction, il: LowLevelILFunction) -> None:
-    if inst.name == "e_mullli": # Multiply Low Scaled Immediate
-        op1 = inst.get_operand_value("RA")
-        op2 = inst.get_operand_value("sci8")
-        dst = inst.get_operand_value("RT")
-        result = il.mult(16, il.reg(4, op1), il.const(4, op2)) # TODO (size)
-        il.append(il.set_reg(4, dst, result)) 
-    elif inst.name == "e_mull2i": # Multiply (2 operand) Low Immediate
-        op1 = inst.get_operand_value("RA")
-        op2 = inst.get_operand_value("SI")
-        dst = op1
-        result = il.mult(16, il.reg(4, op1), il.const(4, op2)) # TODO (size)
-        il.append(il.set_reg(4, dst, result))
-    elif inst.name == "se_mullw": # Multiply Low Word Short Form
-        op1 = inst.get_operand_value("RX")
-        op2 = inst.get_operand_value("RY")
-        dst = op1
-        result = il.mult(8, il.reg(4, op1), il.reg(4, op2)) # TODO (size)
-        il.append(il.set_reg(4, dst, result))
-    elif inst.name == "se_neg": # Negate Short Form
-        op1 = inst.get_operand_value("RX")
-        dst = op1
-        result = il.neg_expr(4, il.reg(4, op1))
-        il.append(il.set_reg(4, dst, result))
+            ei0 = il.const(4, si)
+            flags = "cr0s"
+        ei0 = il.add(4, il.reg(4, ra), ei0)
+        ei0 = il.set_reg(4, ra, ei0, flags)
+        il.append(ei0)
+    elif inst.name in ["e_addi", "e_addic"]: # Add Scaled Immediate
+        assert len(inst.operands) == 4
+        rt = inst.get_operand_value(oper_0)
+        ra = inst.get_operand_value(oper_1)
+        sci8 = inst.get_operand_value(oper_2)
+        if inst.name == "e_addi":
+            ei0 = il.add(4, il.reg(4, ra), il.const(4, sci8))
+        else:
+            ei0 = il.add(4, il.reg(4, ra), il.const(4, sci8), "xer_ca")
+        if inst.get_operand_value(oper_3) : # Rc
+            ei0 = il.set_reg(4, rt, ei0, "cr0s")
+        else:
+            ei0 = il.set_reg(4, rt, ei0)
+        il.append(ei0)
+    elif inst.name == "se_addi": # Add Immediate Short Form
+        assert len(inst.operands) == 2
+        rx = inst.get_operand_value(oper_0)
+        oimm = inst.get_operand_value(oper_1)
+        ei0 = il.add(4, il.reg(4, rx), il.const(4, oimm))
+        ei0 = il.set_reg(4, rx, ei0)
+        il.append(ei0)
     else:
         il.append(il.unimplemented())
+
+
+def lift_sub_instructions(inst: Instruction, il: LowLevelILFunction) -> None:
+    for i in range(len(inst.operands)):
+        if i == 0: oper_0 = inst.operands[0]
+        elif i == 1: oper_1 = inst.operands[1]
+        elif i == 2: oper_2 = inst.operands[2]
+        elif i == 3: oper_3 = inst.operands[3]
+
+    # InstRR("se_sub", "VLE", ["RX", "RY"]): Subtract
+    # InstRR("se_subf", "VLE", ["RX", "RY"]): Subtract From Short Form
+    if inst.name in ["se_sub", "se_subf"]:
+        assert len(inst.operands) == 2
+        rx = inst.get_operand_value(oper_0)
+        ry = inst.get_operand_value(oper_1)
+        ei0 = il.sub(4, il.reg(4, rx), il.reg(4, ry))
+        ei0 = il.set_reg(4, rx, ei0)
+        il.append(ei0)
+    elif inst.name == "e_subfic": # Subtract From Scaled Immediate Carrying
+        assert len(inst.operands) == 4
+        rt = inst.get_operand_value(oper_0)
+        sci8 = inst.get_operand_value(oper_2)
+        ra = inst.get_operand_value(oper_1)
+        ei0 = il.sub(4, il.const(4, sci8), il.reg(4, ra), "xer_ca")
+        if inst.get_operand_value(oper_3):
+            ei0 = il.set_reg(4, rt, ei0, "cr0s")
+        else:
+            ei0 = il.set_reg(4, rt, ei0)
+        il.append(ei0)
+    elif inst.name == "se_subi": # Subtract Immediate
+        assert len(inst.operands) == 3
+        rx = inst.get_operand_value(oper_0)
+        oimm = inst.get_operand_value(oper_1)
+        ei0 = il.sub(4, il.reg(4, rx), il.const(4, oimm))
+        if inst.get_operand_value(oper_2):
+            ei0 = il.set_reg(4, rx, ei0, "cr0s")
+        else:
+            ei0 = il.set_reg(4, rx, ei0)
+        il.append(ei0)
+
+def lift_mul_instructions(inst: Instruction, il: LowLevelILFunction) -> None:
+    for i in range(len(inst.operands)):
+        if i == 0: oper_0 = inst.operands[0]
+        elif i == 1: oper_1 = inst.operands[1]
+        elif i == 2: oper_2 = inst.operands[2]
+    if inst.name == "e_mulli": # Multiply Low Scaled Immediate
+        assert len(inst.operands) == 3
+        ei0 = il.reg(4, inst.get_operand_value(oper_1))
+        ei0 = il.mult(16, ei0, il.const(4, inst.get_operand_value(oper_2))) # TODO (size)
+        il.append(il.set_reg(4, inst.get_operand_value(oper_0), ei0)) 
+    if inst.name == "e_mull2i": # Multiply (2 operand) Low Immediate
+        assert len(inst.operands) == 2
+        ra = inst.get_operand_value(oper_0)
+        si = inst.get_operand_value(oper_1)
+        ei0 = il.mult(16, il.reg(4, ra), il.const(4, si)) # TODO (size)
+        il.append(il.set_reg(4, ra, ei0))
+    if inst.name == "se_mullw": # Multiply Low Word Short Form
+        assert len(inst.operands) == 2
+        rx = inst.get_operand_value(oper_0)
+        ry = inst.get_operand_value(oper_1)
+        ei0 = il.mult(8, il.reg(4, rx), il.reg(4, ry)) # TODO (size)
+        il.append(il.set_reg(4, rx, ei0))
+    if inst.name == "se_neg": # Negate Short Form
+        assert len(inst.operands) == 1
+        rx = inst.get_operand_value(oper_0)
+        ei0 = il.neg_expr(4, il.reg(4, inst.get_operand_value(oper_0)))
+        il.append(il.set_reg(4, rx, ei0))

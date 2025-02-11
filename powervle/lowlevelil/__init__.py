@@ -8,7 +8,8 @@ from .branch import lift_branch_instructions
 from .arithmetic import (lift_add_instructions,
                          lift_sub_instructions,
                          lift_mul_instructions)
-
+from .compare import lift_compare_instructions
+from .load import lift_load_instructions
 
 InstLiftFuncType = Callable[[Instruction, LowLevelILFunction], None]
 
@@ -40,5 +41,33 @@ InstLiftTable: dict[str, InstLiftFuncType] = {
     "e_mull2i"  : lift_mul_instructions,
     "se_mullw"  : lift_mul_instructions,
     "se_neg"    : lift_mul_instructions,
+
+    "se_btsti"  : lift_compare_instructions,
+    "e_cmp16i"  : lift_compare_instructions,
+    "e_cmpi"    : lift_compare_instructions,
+    "se_cmp"    : lift_compare_instructions,
+    "se_cmpi"   : lift_compare_instructions,
+    "e_cmpl16i" : lift_compare_instructions,
+    "e_cmpli"   : lift_compare_instructions,
+    "se_cmpl"   : lift_compare_instructions,
+    "se_cmpli"  : lift_compare_instructions,
+    "e_cmph"    : lift_compare_instructions, # TODO
+    "se_cmph"   : lift_compare_instructions,
+    "e_cmph16i" : lift_compare_instructions,
+    "e_cmphl"   : lift_compare_instructions, # TODO
+    "se_cmphl"  : lift_compare_instructions,
+    "e_cmphl16i": lift_compare_instructions,
+
+    "e_lbz" : lift_load_instructions,
+    "se_lbz" : lift_load_instructions,
+    "e_lbzu" : lift_load_instructions,
+    "e_lha" : lift_load_instructions,
+    "e_lhz" : lift_load_instructions,
+    "se_lhz" : lift_load_instructions,
+    "e_lhau" : lift_load_instructions,
+    "e_lhzu" : lift_load_instructions,
+    "e_lwz" : lift_load_instructions,
+    "se_lwz" : lift_load_instructions,
+    "e_lwzu" : lift_load_instructions
 
 }
