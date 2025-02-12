@@ -46,7 +46,9 @@ class Instruction:
                 return f"r{regnum}"
             elif name in ("ARX", "ARY"):
                 return f"r{8 + value}"
-            elif name == "BF32":
+            elif name in ("BT","BF", "BFA"): # TODO
+                return f"cr{value}"  # or FPSCR
+            elif name in ("BA", "BB", "BF32"):
                 return f"cr{value}"
             elif name == "BI32":
                 return f"cr{value >> 3}"
@@ -118,6 +120,14 @@ class Instruction:
             elif ((bo16 := self.get_field_value("BO16")) != None and
                   (bi16 := self.get_field_value("BI16")) != None):
                 return self._bcmap[bo16][bi16]
+
+    @property
+    def branch_condition_index(self) -> int | None:
+        if self.conditional_branch:
+            ret = self.get_field_value("BI32")
+            if ret == None:
+                ret = self.get_field_value("BI16")
+            return ret // 4
 
 
 def Inst(
@@ -315,4 +325,45 @@ def InstLI20(name: str, category: str, operands: list[str | bytes | int], **othe
         "RT": (6, 11),
         "XO": (16, 17),
         "li20": ((17, 21, 16), (11, 16, 11), (21, 32, 0))
+    }, operands, **other)
+
+def InstX(name: str, category: str, operands: list[str | bytes | int], **other) -> type[Instruction]:
+    return Inst(name, category, 4, {
+        "OPCD": (0, 6),
+        "RT" : (6, 11),
+        "RA" : (11, 16),
+        "RB" : (16, 21),
+        "XO" : (21, 31),
+        "NB" : (16, 21),
+        "SR" : (12, 16),  
+        "RS" : (6, 11),
+        "Rc" : (31, 32),
+        "SH" : (16, 21),
+        "L" : (15, 16),
+        #"L" : (10, 11),
+        #"L" : (9, 11),
+        "BF" : (6, 9),
+        "FRA" : (11, 16),
+        "FRB" : (16, 21),
+        "BFA" : (11, 14),
+        "U" : (16, 20),
+        "TH" : (7, 11),
+        "CT" : (7, 11),
+        "TO" : (6, 11),
+        "FRT" : (6, 11)
+    }, operands, **other)
+
+def InstXL(name: str, category: str, operands: list[str | bytes | int], **other) -> type[Instruction]:
+    return Inst(name, category, 4, {
+        "OPCD": (0, 6),
+        "BT" : (6, 11),
+        "BA" : (11, 16),
+        "BB" : (16, 21),
+        "XO" : (21, 31),
+        "BO" : (6, 11),
+        "BI" : (11, 16),
+        "BH" : (19, 21),
+        "LK" : (31, 32),
+        "BF" : (6, 9),
+        "BFA" : (11, 14)
     }, operands, **other)
