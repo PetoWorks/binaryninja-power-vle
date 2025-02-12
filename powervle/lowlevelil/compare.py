@@ -46,7 +46,10 @@ def lift_compare_instructions(inst: Instruction, il: LowLevelILFunction) -> None
                                 # Compare Halfword Short Form
                                 # Compare Halfword Logical Short Form
         assert len(inst.operands) == 2       
-        if inst.name in ["se_cmph", "se_cmphl"]:
+        if inst.name == "se_cmph":
+            ei0 = il.sign_extend(4, il.reg(2, inst.get_operand_value(oper_0)))
+            ei1 = il.sign_extend(4, il.reg(2, inst.get_operand_value(oper_1)))
+        elif inst.name == "se_cmphl":
             ei0 = il.reg(2, inst.get_operand_value(oper_0))
             ei1 = il.reg(2, inst.get_operand_value(oper_1))
         else:

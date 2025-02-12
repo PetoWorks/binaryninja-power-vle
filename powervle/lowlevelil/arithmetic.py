@@ -108,19 +108,19 @@ def lift_mul_instructions(inst: Instruction, il: LowLevelILFunction) -> None:
     if inst.name == "e_mulli": # Multiply Low Scaled Immediate
         assert len(inst.operands) == 3
         ei0 = il.reg(4, inst.get_operand_value(oper_1))
-        ei0 = il.mult(16, ei0, il.const(4, inst.get_operand_value(oper_2))) # TODO (size)
+        ei0 = il.mult(16, ei0, il.const(4, inst.get_operand_value(oper_2))) 
         il.append(il.set_reg(4, inst.get_operand_value(oper_0), ei0)) 
     if inst.name == "e_mull2i": # Multiply (2 operand) Low Immediate
         assert len(inst.operands) == 2
         ra = inst.get_operand_value(oper_0)
         si = inst.get_operand_value(oper_1)
-        ei0 = il.mult(16, il.reg(4, ra), il.const(4, si)) # TODO (size)
+        ei0 = il.mult(16, il.reg(4, ra), il.const(4, si)) 
         il.append(il.set_reg(4, ra, ei0))
     if inst.name == "se_mullw": # Multiply Low Word Short Form
         assert len(inst.operands) == 2
         rx = inst.get_operand_value(oper_0)
         ry = inst.get_operand_value(oper_1)
-        ei0 = il.mult(8, il.reg(4, rx), il.reg(4, ry)) # TODO (size)
+        ei0 = il.mult(8, il.reg(4, rx), il.reg(4, ry))
         il.append(il.set_reg(4, rx, ei0))
     if inst.name == "se_neg": # Negate Short Form
         assert len(inst.operands) == 1
