@@ -16,11 +16,14 @@ def lift_bd24_branch_instructions(inst: Instruction, il: LowLevelILFunction):
         return
     # BD24 || 0b0 처리 및 sign-extend
     offset = il.sign_extend(4, il.const(4, bd24 << 1))
-    target_addr = il.add(4, il.const(4, il.current_address), offset)
-    next_instr_addr = il.add(4, il.const(4, il.current_address), il.const(4, 4))
+    target_addr = il.current_address + offset
+    next_instr_addr = il.current_address + 4
+
     if int(lk) == 1:
         il.append(il.set_reg(4, "lr", next_instr_addr))
-    il.append(il.jump(target_addr))
+        il.append(il.call(il.const(4, target_addr)))
+    else:
+        il.append(il.jump(il.const(4, target_addr)))
 
 def lift_bd8_branch_instructions(inst: Instruction, il: LowLevelILFunction):
     if not isinstance(il, LowLevelILFunction):
@@ -35,12 +38,14 @@ def lift_bd8_branch_instructions(inst: Instruction, il: LowLevelILFunction):
         return
     # 8비트 -> 32비트 sign-extend
     offset = il.sign_extend(4, il.const(4, bd8 << 1))
-    target_addr = il.add(4, il.const(4, il.current_address), offset)
-    next_instr_addr = il.add(4, il.const(4, il.current_address), il.const(4, 2))  
+    target_addr = il.current_address + offset
+    next_instr_addr = il.current_address + 2
 
     if int(lk) == 1:
         il.append(il.set_reg(4, "lr", next_instr_addr))
-    il.append(il.jump(target_addr))
+        il.append(il.call(il.const(4, target_addr)))
+    else:
+        il.append(il.jump(il.const(4, target_addr)))
 
 def lift_bd15_branch_instructions(inst: Instruction, il: LowLevelILFunction):
     if not isinstance(il, LowLevelILFunction):
@@ -56,18 +61,20 @@ def lift_bd15_branch_instructions(inst: Instruction, il: LowLevelILFunction):
         il.append(il.unimplemented())
         return
     
-    offset = il.sign_extend(4, il.const(4, bd15 << 1))
-    target_addr = il.add(4, il.const(4, il.current_address), offset)
-    next_instr_addr = il.add(4, il.const(4, il.current_address), il.const(4, 4)) 
+    offset = (bd15 << 1)
+    if bd15 & (1 << 14):
+        offset -= (1 << 15)
+    target_addr = il.current_address + offset
+    next_instr_addr = il.current_address + 4
 
     # BO32_0이 1이면 CTR 감소
     if (bo32 & 1) != 0:
-        new_ctr = il.sub(4, il.reg(4, "CTR"), il.const(4, 1))
-        il.append(il.set_reg(4, "CTR", new_ctr))
+        new_ctr = il.sub(4, il.reg(4, "ctr"), il.const(4, 1))
+        il.append(il.set_reg(4, "ctr", new_ctr))
    
     ctr_ok = il.or_expr(4,
         il.compare_equal(4, il.const(4, bo32 & 1), il.const(4, 0)),  
-        il.xor_expr(4, il.compare_not_equal(4, il.reg(4, "CTR"), il.const(4, 0)), il.const(4, (bo32 >> 1) & 1))
+        il.xor_expr(4, il.compare_not_equal(4, il.reg(4, "ctr"), il.const(4, 0)), il.const(4, (bo32 >> 1) & 1))
     )
 
     cr_field_index = bi32 // 4
@@ -80,9 +87,12 @@ def lift_bd15_branch_instructions(inst: Instruction, il: LowLevelILFunction):
         il.compare_equal(4, il.flag(cond_flag), il.const(4, (bo32 >> 1) & 1))  # CR(BI32+32)와 BO32_1 비교
     )
     branch_cond = il.and_expr(4, ctr_ok, cond_ok)
-    il.append(il.if_expr(branch_cond, il.jump(target_addr), il.jump(next_instr_addr)))
+    
     if lk == 1:
-        il.append(il.set_reg(4, "lr", next_instr_addr))
+        il.append(il.set_reg(4, "lr", il.const(4, next_instr_addr)))
+        il.append(il.call(il.const(4, next_instr_addr)))
+    else:
+        il.append(il.if_expr(branch_cond, il.jump(il.const(4, target_addr)), il.jump(il.const(4, next_instr_addr))))
 
 def lift_bd8_cond_branch_instructions(inst: Instruction, il: LowLevelILFunction):
     if not isinstance(il, LowLevelILFunction):
@@ -101,10 +111,12 @@ def lift_bd8_cond_branch_instructions(inst: Instruction, il: LowLevelILFunction)
         il.append(il.unimplemented())
         return
 
-    offset = il.sign_extend(4, il.const(1, bd8 << 1))
+    offset = (bd8 << 1)
+    if bd8 & (1 << 7):
+        offset -= (1 << 8)
 
-    target_addr = il.add(4, il.const(4, il.current_address), offset)
-    next_instr_addr = il.add(4, il.const(4, il.current_address), il.const(4, 2))
+    target_addr = il.current_address + offset
+    next_instr_addr = il.current_address + 2
 
     cr_field_index = bi16 // 4
     bit_index = bi16 % 4
@@ -112,30 +124,31 @@ def lift_bd8_cond_branch_instructions(inst: Instruction, il: LowLevelILFunction)
     cond_flag = f"cr{cr_field_index}{flag_suffixes[bit_index]}"
 
     cond_ok = il.compare_equal(1, il.flag(cond_flag), il.const(1, bo16 & 1))
-    il.append(il.if_expr(cond_ok, il.jump(target_addr), il.jump(next_instr_addr)))
 
     lk = inst.get_field_value("LK") if "LK" in inst.operands else 0
     if int(lk) == 1:
-        il.append(il.set_reg(4, "lr", next_instr_addr))
+        il.append(il.set_reg(4, "lr", il.const(4, next_instr_addr)))
+        il.append(il.if_expr(cond_ok, il.call(il.const(4, target_addr)), il.call(il.const(4, next_instr_addr))))
+    else:
+        il.append(il.if_expr(cond_ok, il.jump(il.const(4, target_addr)), il.jump(il.const(4, next_instr_addr))))
 
 def lift_branch_instructions(inst: Instruction, il: LowLevelILFunction) -> None:
-    size = 2
     lk = inst.get_field_value("LK") if "LK" in inst.operands else 0
     # CTR_0:62 || 0b0 구현
-    target_expr = il.and_expr(4, il.reg(4, "ctr"), il.const(4, ~1))
+    target_expr = il.and_expr(4, il.reg(4, "ctr"), il.const(4, 0xFFFFFFFE))
+    next_instr_addr = il.current_address + 2
     if int(lk) == 1:
-        next_instr_addr = il.add(size, il.const(size, il.current_address), il.const(size, 2))
-        il.append(il.set_reg(4, "lr", next_instr_addr))
-    il.append(il.jump(target_expr))
+        il.append(il.set_reg(4, "lr", il.const(4, next_instr_addr)))
+        il.append(il.call(il.const(4, target_expr)))
+    il.append(il.jump(il.const(4, target_expr)))
 
 def lift_branch_lr_instructions(inst: Instruction, il: LowLevelILFunction) -> None:
-    size = 2
     lk = inst.get_field_value("LK") if "LK" in inst.operands else 0
     
     orig_lr = il.reg(4, "lr")
-    target_addr = il.and_expr(4, orig_lr, il.const(4, ~1))
-    
+    target_addr = il.and_expr(4, orig_lr, il.const(4, 0xFFFFFFFE))
+    next_instr_addr = il.current_address + 2
     if int(lk) == 1:
-        next_instr_addr = il.add(size, il.const(size, il.current_address), il.const(size, 2))
-        il.append(il.set_reg(4, "lr", next_instr_addr))
-    il.append(il.jump(target_addr))
+        il.append(il.set_reg(4, "lr", il.const(4, next_instr_addr)))
+        il.append(il.call(il.const(4, target_addr)))
+    il.append(il.jump(il.const(4, target_addr)))
