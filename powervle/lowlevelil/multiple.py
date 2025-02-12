@@ -22,16 +22,18 @@ def lift_multiple_instructions(inst: Instruction, il: LowLevelILFunction) -> Non
             il.append(il.unimplemented())
             return
         if ra == 0:
-            EA = il.const(4, 0)
+            EA = il.const(4, d8)
         else :
-            EA = il.reg(4, ra)
-        EA = il.add(4, EA, il.const(4, d8))
-        
+            EA = il.add(4, il.reg(4, ra), il.const(4, d8))
         while i <= regs.index('r31'):
             ei0 = il.set_reg(4, regs[i], il.zero_extend(4, il.load(4, EA)))
             il.append(ei0)
             i += 1
-            EA = il.add(4, EA, il.const(4, 4))
+            d8 += 4
+            if ra == 0:
+                EA = il.const(4, d8)
+            else :
+                EA = il.add(4, il.reg(4, ra), il.const(4, d8))
 
     # Store Multiple Word: InstD8("e_stmw", "VLE", ["RS", "RA", "D8"])
     elif inst.name == "e_stmw":
@@ -41,16 +43,18 @@ def lift_multiple_instructions(inst: Instruction, il: LowLevelILFunction) -> Non
         d8 = inst.get_operand_value(oper_2)
         i = regs.index(rs)
         if ra == 0:
-            EA = il.const(4, 0)
+            EA = il.const(4, d8)
         else :
-            EA = il.reg(4, ra)
-        EA = il.add(4, EA, il.const(4, d8))      
-
+            EA = il.add(4, il.reg(4, ra), il.const(4, d8))
         while i <= regs.index('r31'):
             ei0 = il.store(4, EA, il.reg(4, regs[i]))
             il.append(ei0)       
             i += 1
-            EA = il.add(4, EA, il.const(4, 4))
+            d8 += 4
+            if ra == 0:
+                EA = il.const(4, d8)
+            else :
+                EA = il.add(4, il.reg(4, ra), il.const(4, d8))
 
     else:
         il.append(il.unimplemented())
