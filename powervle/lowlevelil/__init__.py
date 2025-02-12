@@ -5,12 +5,12 @@ from binaryninja.lowlevelil import LowLevelILFunction
 from ..instruction import Instruction
 from .branch import lift_branch_instructions
 from .logical import lift_logical_instructions
-
 from .arithmetic import (lift_add_instructions,
                          lift_sub_instructions,
                          lift_mul_instructions)
 from .compare import lift_compare_instructions
 from .load import lift_load_instructions
+from .multiple import lift_multiple_instructions
 
 InstLiftFuncType = Callable[[Instruction, LowLevelILFunction], None]
 
@@ -97,4 +97,7 @@ InstLiftTable: dict[str, InstLiftFuncType] = {
     "se_mfar"    : lift_logical_instructions,
     "se_mr"      : lift_logical_instructions,
     "se_mtar"    : lift_logical_instructions,
+
+    "e_lmw": lift_multiple_instructions,
+    "e_stmw": lift_multiple_instructions
 }
