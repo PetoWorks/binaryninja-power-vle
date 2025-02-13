@@ -139,7 +139,8 @@ def lift_branch_instructions(inst: Instruction, il: LowLevelILFunction) -> None:
     if int(lk) == 1:
         il.append(il.set_reg(4, "lr", il.const(4, next_instr_addr)))
         il.append(il.call(il.const(4, target_expr)))
-    il.append(il.jump(il.const(4, target_expr)))
+    else: 
+        il.append(il.jump(il.const(4, target_expr)))
 
 def lift_branch_lr_instructions(inst: Instruction, il: LowLevelILFunction) -> None:
     lk = inst.get_field_value("LK") if "LK" in inst.operands else 0
@@ -150,4 +151,5 @@ def lift_branch_lr_instructions(inst: Instruction, il: LowLevelILFunction) -> No
     if int(lk) == 1:
         il.append(il.set_reg(4, "lr", il.const(4, next_instr_addr)))
         il.append(il.call(il.const(4, target_addr)))
-    il.append(il.jump(il.const(4, target_addr)))
+    else:
+        il.append(il.jump(il.const(4, target_addr)))
