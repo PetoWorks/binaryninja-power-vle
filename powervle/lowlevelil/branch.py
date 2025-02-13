@@ -14,7 +14,7 @@ def lift_bd24_branch_instructions(inst: Instruction, il: LowLevelILFunction):
     if bd24 is None:
         il.append(il.unimplemented())
         return
-    # BD24 || 0b0 처리 및 sign-extend
+
     offset = il.sign_extend(4, il.const(4, bd24 << 1))
     target_addr = il.current_address + offset
     next_instr_addr = il.current_address + 4
@@ -36,7 +36,7 @@ def lift_bd8_branch_instructions(inst: Instruction, il: LowLevelILFunction):
     if bd8 is None:
         il.append(il.unimplemented())
         return
-    # 8비트 -> 32비트 sign-extend
+
     offset = il.sign_extend(4, il.const(4, bd8 << 1))
     target_addr = il.current_address + offset
     next_instr_addr = il.current_address + 2
@@ -51,7 +51,7 @@ def lift_bd15_branch_instructions(inst: Instruction, il: LowLevelILFunction):
     if not isinstance(il, LowLevelILFunction):
         print(f"[Error] Expected LowLevelILFunction, but got {type(il)}")
         return
-    # 필드 값 추출
+
     bo32 = inst.get_field_value("BO32")
     bi32 = inst.get_field_value("BI32")
     bd15 = inst.get_field_value("BD15")
@@ -67,7 +67,7 @@ def lift_bd15_branch_instructions(inst: Instruction, il: LowLevelILFunction):
     target_addr = il.current_address + offset
     next_instr_addr = il.current_address + 4
 
-    # BO32_0이 1이면 CTR 감소
+
     if (bo32 & 1) != 0:
         new_ctr = il.sub(4, il.reg(4, "ctr"), il.const(4, 1))
         il.append(il.set_reg(4, "ctr", new_ctr))
@@ -83,8 +83,8 @@ def lift_bd15_branch_instructions(inst: Instruction, il: LowLevelILFunction):
     cond_flag = f"cr{cr_field_index}{flag_suffixes[bit_index]}"
 
     cond_ok = il.or_expr(4,
-        il.compare_equal(4, il.const(4, bo32 & 1), il.const(4, 0)),  # BO32_0 == 0이면 무조건 실행
-        il.compare_equal(4, il.flag(cond_flag), il.const(4, (bo32 >> 1) & 1))  # CR(BI32+32)와 BO32_1 비교
+        il.compare_equal(4, il.const(4, bo32 & 1), il.const(4, 0)),  
+        il.compare_equal(4, il.flag(cond_flag), il.const(4, (bo32 >> 1) & 1))  
     )
     branch_cond = il.and_expr(4, ctr_ok, cond_ok)
     
@@ -99,7 +99,6 @@ def lift_bd8_cond_branch_instructions(inst: Instruction, il: LowLevelILFunction)
         print(f"[Error] Expected LowLevelILFunction, but got {type(il)}")
         return
 
-    # 피연산자 이름 대신에 실제 필드 값 가져오도록 수정함
     bo16 = inst.get_field_value("BO16")
     bi16 = inst.get_field_value("BI16")
     if bo16 is None or bi16 is None:
@@ -134,7 +133,7 @@ def lift_bd8_cond_branch_instructions(inst: Instruction, il: LowLevelILFunction)
 
 def lift_branch_instructions(inst: Instruction, il: LowLevelILFunction) -> None:
     lk = inst.get_field_value("LK") if "LK" in inst.operands else 0
-    # CTR_0:62 || 0b0 구현
+
     target_expr = il.and_expr(4, il.reg(4, "ctr"), il.const(4, 0xFFFFFFFE))
     next_instr_addr = il.current_address + 2
     if int(lk) == 1:

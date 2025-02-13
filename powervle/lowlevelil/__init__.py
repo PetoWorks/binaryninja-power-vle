@@ -11,14 +11,7 @@ from .branch import(
     lift_branch_instructions,
     lift_branch_lr_instructions
 )
-from .system_linkage import(
-    lift_system_call, 
-    lift_illegal_instruction,
-    lift_machine_check_return,
-    lift_critical_return, 
-    lift_return_from_interrupt, 
-    lift_debug_return
-)
+
 
 InstLiftFuncType = Callable[[Instruction, LowLevelILFunction], None] 
 
@@ -40,10 +33,10 @@ InstLiftTable: dict[str, InstLiftFuncType] = {
     "se_blr"     : lift_branch_lr_instructions,
     "se_blrl"    : lift_branch_lr_instructions,
     # Chapter 4.3 Instructions
-    "se_sc"      : lift_system_call,
-    "se_illegal" : lift_illegal_instruction,
-    "se_rfmci"   : lift_machine_check_return,
-    "se_rfci"    : lift_critical_return,
-    "se_rfi"     : lift_return_from_interrupt,
-    "se_rfdi"    : lift_debug_return,
+    "se_sc"      : lambda inst, il: il.append(il.system_call()),
+    "se_illegal" : lambda inst, il: il.append(il.undefined()),
+    "se_rfmci"   : lambda inst, il: il.append(il.intrinsic([], "rfmci", [])),
+    "se_rfci"    : lambda inst, il: il.append(il.intrinsic([], "rfci", [])),
+    "se_rfi"     : lambda inst, il: il.append(il.intrinsic([], "rfi", [])),
+    "se_rfdi"    : lambda inst, il: il.append(il.intrinsic([], "rfdi", [])),
 }
