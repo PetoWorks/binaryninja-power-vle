@@ -12,6 +12,10 @@ from .branch import(
     lift_branch_lr_instructions
 )
 
+from .cond_register import(
+    lift_cr_instructions,
+    lift_move_cr_instruction
+)
 
 InstLiftFuncType = Callable[[Instruction, LowLevelILFunction], None] 
 
@@ -39,4 +43,14 @@ InstLiftTable: dict[str, InstLiftFuncType] = {
     "se_rfci"    : lambda inst, il: il.append(il.intrinsic([], "rfci", [])),
     "se_rfi"     : lambda inst, il: il.append(il.intrinsic([], "rfi", [])),
     "se_rfdi"    : lambda inst, il: il.append(il.intrinsic([], "rfdi", [])),
+    #Chapter 4.4 Condition Register Instructions
+    "e_crand"    : lift_cr_instructions,
+    "e_crandc"   : lift_cr_instructions,
+    "e_creqv"    : lift_cr_instructions,
+    "e_crnand"   : lift_cr_instructions,
+    "e_crnor"    : lift_cr_instructions,
+    "e_cror"     : lift_cr_instructions,
+    "e_crorc"    : lift_cr_instructions,
+    "e_crxor"    : lift_cr_instructions,
+    "e_mcrf"     : lift_move_cr_instruction
 }
