@@ -126,3 +126,38 @@ def lift_shift_instructions(inst: Instruction, il: LowLevelILFunction) -> None:
         ei0 = il.set_reg(4, rx, ei0)
 
         il.append(ei0)
+    
+    # Rotate Left Word: InstX("e_rlw", "VLE",  ["RA", "RS", "RB", "Rc"])
+    # Rotate Left Word Immediate: InstX("e_rlwi", "VLE",  ["RA", "RS", "SH", "Rc"])
+    elif inst.name in ["e_rlw", "e_rlwi"]:
+        assert len(inst.operands) == 4
+        ra = inst.get_operand_value(oper_0)
+        rs = inst.get_operand_value(oper_1)
+        rc = inst.get_operand_value(oper_3)
+        if inst.name == "e_rlw":
+            ei0 = il.reg(1, inst.get_operand_value(oper_2)) # rb
+        else : # "e_rlwi"
+            ei0 = il.const(4, inst.get_operand_value(oper_2)) # sh
+        ei0 = il.rotate_left(4, il.reg(4, rs), ei0)
+        il.set_reg(4, ra, ei0, 'cr0s' if rc else None)
+        il.append(ei0)
+
+    # Shift Left Word Immediate: InstX("e_slwi", "VLE",  ["RA", "RS", "SH", "Rc"])
+    # Shift Right Word Immediate: InstX("e_srwi", "VLE", ["RA", "RS", "SH", "Rc"])
+    elif inst.name in ["e_slwi", "e_srwi"]:
+        assert len(inst.operands) == 4
+        ra = inst.get_operand_value(oper_0)
+        rs = inst.get_operand_value(oper_1)
+        sh = inst.get_operand_value(oper_2)
+        rc = inst.get_operand_value(oper_3)
+
+        if inst.name == "e_slwi":
+            ei0 = il.shift_left(4, il.reg(4, rs), il.const(4, sh))
+        else:
+            ei0 = il.logical_shift_right(4, il.reg(4, rs), il.const(4, sh))
+
+        ei0 = il.set_reg(4, ra, ei0, 'cr0s' if rc else None)
+        il.append(ei0)
+
+    else:
+        il.append(il.unimplemented())
