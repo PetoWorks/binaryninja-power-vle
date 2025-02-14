@@ -46,12 +46,16 @@ class Instruction:
                 return f"r{regnum}"
             elif name in ("ARX", "ARY"):
                 return f"r{8 + value}"
-            elif name in ("BT","BF", "BFA"): # TODO
-                return f"cr{value}"  # or FPSCR
-            elif name in ("BA", "BB", "BF32"):
+            elif name == "BT": # TODO: CR or FPSCR
+                return f"cr{value >> 2}" # in "VLE"
+            elif name in ("BF", "BFA"): # TODO: CR or FPSCR
+                return f"cr{value}" # in "VLE"
+            elif name in ("BA", "BB"):
+                return f"cr{value >> 2}"
+            elif name == "BF32":
                 return f"cr{value}"
             elif name == "BI32":
-                return f"cr{value >> 3}"
+                return f"cr{value >> 2}"
             elif name == "BI16":
                 return f"cr0"
             elif name == "SD4":
