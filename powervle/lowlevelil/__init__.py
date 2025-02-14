@@ -52,10 +52,10 @@ InstLiftTable: dict[str, InstLiftFuncType] = {
     "e_cmpli"   : lift_compare_instructions,
     "se_cmpl"   : lift_compare_instructions,
     "se_cmpli"  : lift_compare_instructions,
-    "e_cmph"    : lift_compare_instructions, # TODO
+    "e_cmph"    : lift_compare_instructions, 
     "se_cmph"   : lift_compare_instructions,
     "e_cmph16i" : lift_compare_instructions,
-    "e_cmphl"   : lift_compare_instructions, # TODO
+    "e_cmphl"   : lift_compare_instructions, 
     "se_cmphl"  : lift_compare_instructions,
     "e_cmphl16i": lift_compare_instructions,
 
