@@ -23,8 +23,6 @@ InstLiftTable: dict[str, InstLiftFuncType] = {
     
     "se_isync"   : lambda inst, il: il.append(il.intrinsic([], "isync", [])),
     # Chatper 4.2 Instructions
-    "se_blr"     : lift_branch_instructions,
-    "se_bctr"    : lift_branch_instructions,
     "e_b"        : lift_bd24_branch_instructions,
     "e_bl"       : lift_bd24_branch_instructions,
     "se_b"       : lift_bd8_branch_instructions,
