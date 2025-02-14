@@ -53,4 +53,8 @@ InstLiftTable: dict[str, InstLiftFuncType] = {
     "se_sraw"    : lift_shift_instructions,
     "se_srwi"    : lift_shift_instructions,
     "se_srw"     : lift_shift_instructions,
+    "e_rlw"     : lift_shift_instructions,
+    "e_rlwi"     : lift_shift_instructions,
+    "e_slwi"     : lift_shift_instructions,
+    "e_srwi"     : lift_shift_instructions,
 }
