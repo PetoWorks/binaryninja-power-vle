@@ -73,12 +73,22 @@ def lift_compare_instructions(inst: Instruction, il: LowLevelILFunction) -> None
         ei2 = il.sub(4, ei0, ei1, flags)
         il.append(ei2)
 
-    elif inst.name == "e_cmph":  # Compare Halfword
-        # TODO (X-Form)
-        il.append(il.unimplemented())
-    elif inst.name == "e_cmphl":  # Compare Halfword Logical
-        # TODO (X-Form)
-        il.append(il.unimplemented())
+    # InstX("e_cmph", "VLE",  ["BF", "RA", "RB"]): Compare Halfword
+    # InstX("e_cmphl", "VLE",  ["BF", "RA", "RB"]): 
+    elif inst.name in ["e_cmph", "e_cmphl"]:
+        assert len(inst.operands) == 3
+        bf = inst.get_operand_value(oper_0)
+        ra = inst.get_operand_value(oper_1)
+        rb = inst.get_operand_value(oper_2)
+        if inst.name == "e_cmph":
+            ei0 = il.sign_extend(4, il.reg(2, ra))
+            ei1 = il.sign_extend(4, il.reg(2, rb))
+        else:
+            ei0 = il.zero_extend(4, il.reg(2, ra))
+            ei1 = il.zero_extend(4, il.reg(2, rb))
+        flags = bf + "s"
+        ei2 = il.sub(4, ei0, ei1, flags)
+        il.append(ei2)
 
     else:
         il.append(il.unimplemented())
