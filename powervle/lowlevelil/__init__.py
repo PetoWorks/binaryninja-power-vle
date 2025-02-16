@@ -18,7 +18,7 @@ from .multiple import lift_multiple_instructions
 InstLiftFuncType = Callable[[Instruction, LowLevelILFunction], None]
 
 InstLiftTable: dict[str, InstLiftFuncType] = {
-    "se_illegal" : lambda inst, il: il.append(il.undefined()),
+    "se_illegal" : lambda inst, il: il.append(il.unimplemented()),
     "se_isync"   : lambda inst, il: il.append(il.intrinsic([], "isync", [])),
     "se_sc"      : lambda inst, il: il.append(il.system_call()),
     "se_blr"     : lift_branch_instructions,

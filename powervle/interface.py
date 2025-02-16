@@ -265,7 +265,7 @@ class PowerVLE(Architecture):
 
         instruction = self.decode(data, addr)
         if not instruction:
-            return [InstructionTextToken(InstructionTextTokenType.TextToken, "#UNAVAILABLE")], 4
+            return [InstructionTextToken(InstructionTextTokenType.InstructionToken, "illegal")], 4
 
         tokens = []
 
@@ -303,12 +303,13 @@ class PowerVLE(Architecture):
 
         instruction = self.decode(data, addr)
         if not instruction:
+            il.append(il.undefined())
             return 4
 
         if instruction.name in InstLiftTable and InstLiftTable[instruction.name]:
             InstLiftTable[instruction.name](instruction, il)
         else:
-            il.unimplemented()
+            il.append(il.unimplemented())
 
         return instruction.length
 
@@ -356,7 +357,3 @@ class PowerVLE(Architecture):
                 return fn(size, left, write)
 
         return super().get_flag_write_low_level_il(op, size, write_type, flag, operands, il)
-    '''
-    def get_intrinsic_name(i: int) -> str:
-        return "foo"
-    '''
