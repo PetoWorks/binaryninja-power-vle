@@ -3,47 +3,35 @@ from typing import Callable
 from binaryninja.lowlevelil import LowLevelILFunction
 
 from ..instruction import Instruction
-from .branch import lift_branch_instructions
+
 from .logical import lift_logical_instructions
 from .shift import lift_shift_instructions
-from .arithmetic import (lift_add_instructions,
-                         lift_sub_instructions,
-                         lift_mul_instructions)
+from .arithmetic import lift_add_instructions, lift_sub_instructions, lift_mul_instructions
 from .compare import lift_compare_instructions
 from .load import lift_load_instructions
 from .move_sysreg import lift_move_sysreg_instructions
 from .store import lift_store_instructions
 from .multiple import lift_multiple_instructions
-from .branch import( 
-    lift_bd24_branch_instructions,
-    lift_bd8_branch_instructions,
-    lift_bd15_branch_instructions,
-    lift_bd8_cond_branch_instructions,
-    lift_branch_instructions,
-    lift_branch_lr_instructions
-)
+from .branch import lift_branch_instructions, lift_cond_branch_instructions, lift_indirect_branch_instructions
 
-from .cond_register import(
-    lift_cr_instructions,
-    lift_move_cr_instruction
-)
 
 InstLiftFuncType = Callable[[Instruction, LowLevelILFunction], None] 
 
+
 InstLiftTable: dict[str, InstLiftFuncType] = {
+    "se_illegal" : lambda inst, il: il.append(il.undefined()),
     "se_isync"   : lambda inst, il: il.append(il.intrinsic([], "isync", [])),
-    "e_b"        : lift_bd24_branch_instructions,
-    "e_bl"       : lift_bd24_branch_instructions,
-    "se_b"       : lift_bd8_branch_instructions,
-    "se_bl"      : lift_bd8_branch_instructions,
-    "e_bc"       : lift_bd15_branch_instructions,
-    "e_bcl"      : lift_bd15_branch_instructions,
-    "se_bc"      : lift_bd8_cond_branch_instructions,
-    "se_bctr"    : lift_branch_instructions,
-    "se_rfi"     : lambda inst, il: il.append(il.ret(il.unimplemented())),
-    "se_rfci"    : None,
-    "se_rfdi"    : None,
-    "se_rfmci"   : None,
+    "se_sc"      : lambda inst, il: il.append(il.system_call()),
+    "se_rfi"     : lambda inst, il: il.append(il.intrinsic([], "rfi", [])),
+    "se_rfci"    : lambda inst, il: il.append(il.intrinsic([], "rfci", [])),
+    "se_rfdi"    : lambda inst, il: il.append(il.intrinsic([], "rfdi", [])),
+    "se_rfmci"   : lambda inst, il: il.append(il.intrinsic([], "rfmci", [])),
+    "e_b"        : lift_branch_instructions,
+    "se_b"       : lift_branch_instructions,
+    "e_bc"       : lift_cond_branch_instructions,
+    "se_bc"      : lift_cond_branch_instructions,
+    "se_blr"     : lift_indirect_branch_instructions,
+    "se_bctr"    : lift_indirect_branch_instructions,
     "se_add"     : lift_add_instructions,
     "e_add16i"   : lift_add_instructions,
     "e_add2i"    : lift_add_instructions,
@@ -138,22 +126,4 @@ InstLiftTable: dict[str, InstLiftFuncType] = {
     "e_rlwi"     : lift_shift_instructions,
     "e_slwi"     : lift_shift_instructions,
     "e_srwi"     : lift_shift_instructions,
-    "se_bctrl"   : lift_branch_instructions,
-    "se_blr"     : lift_branch_lr_instructions,
-    "se_blrl"    : lift_branch_lr_instructions,
-    "se_sc"      : lambda inst, il: il.append(il.system_call()),
-    "se_illegal" : lambda inst, il: il.append(il.undefined()),
-    "se_rfmci"   : lambda inst, il: il.append(il.intrinsic([], "rfmci", [])),
-    "se_rfci"    : lambda inst, il: il.append(il.intrinsic([], "rfci", [])),
-    "se_rfi"     : lambda inst, il: il.append(il.intrinsic([], "rfi", [])),
-    "se_rfdi"    : lambda inst, il: il.append(il.intrinsic([], "rfdi", [])),
-    "e_crand"    : lift_cr_instructions,
-    "e_crandc"   : lift_cr_instructions,
-    "e_creqv"    : lift_cr_instructions,
-    "e_crnand"   : lift_cr_instructions,
-    "e_crnor"    : lift_cr_instructions,
-    "e_cror"     : lift_cr_instructions,
-    "e_crorc"    : lift_cr_instructions,
-    "e_crxor"    : lift_cr_instructions,
-    "e_mcrf"     : lift_move_cr_instruction
 }

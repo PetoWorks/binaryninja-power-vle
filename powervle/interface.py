@@ -60,10 +60,6 @@ class PowerVLE(Architecture):
     instr_alignment = 2
     max_instr_length = 4
 
-    intrinsics = {
-        'isync': IntrinsicInfo([], [])
-    }
-
     regs = {
         'lr': RegisterInfo("lr", 4, 0),
         'ctr': RegisterInfo("ctr", 4, 0),
@@ -208,6 +204,14 @@ class PowerVLE(Architecture):
         ]
     }
 
+    intrinsics = {
+        'isync' : IntrinsicInfo([], []),
+        'rfi'   : IntrinsicInfo([], []),
+        'rfci'  : IntrinsicInfo([], []),
+        'rfdi'  : IntrinsicInfo([], []),
+        'rfmci' : IntrinsicInfo([], []),
+    }
+
     categories = PowerCategory.VLE
 
     def __init__(self):
@@ -308,7 +312,7 @@ class PowerVLE(Architecture):
 
         instruction = self.decode(data, addr)
         if not instruction:
-            il.append(il.undefined())
+            il.append(il.unimplemented())
             return 4
 
         if instruction.name in InstLiftTable and InstLiftTable[instruction.name]:
