@@ -5,6 +5,7 @@ from binaryninja.lowlevelil import LowLevelILFunction
 from ..instruction import Instruction
 from .branch import lift_branch_instructions
 from .logical import lift_logical_instructions
+from .shift import lift_shift_instructions
 
 from .arithmetic import (lift_add_instructions,
                          lift_sub_instructions,
@@ -97,4 +98,16 @@ InstLiftTable: dict[str, InstLiftFuncType] = {
     "se_mfar"    : lift_logical_instructions,
     "se_mr"      : lift_logical_instructions,
     "se_mtar"    : lift_logical_instructions,
+    "e_rlwimi"   : lift_shift_instructions,
+    "e_rlwinm"   : lift_shift_instructions,
+    "se_slwi"    : lift_shift_instructions,
+    "se_slw"     : lift_shift_instructions,
+    "se_srawi"   : lift_shift_instructions,
+    "se_sraw"    : lift_shift_instructions,
+    "se_srwi"    : lift_shift_instructions,
+    "se_srw"     : lift_shift_instructions,
+    "e_rlw"     : lift_shift_instructions,
+    "e_rlwi"     : lift_shift_instructions,
+    "e_slwi"     : lift_shift_instructions,
+    "e_srwi"     : lift_shift_instructions,
 }
