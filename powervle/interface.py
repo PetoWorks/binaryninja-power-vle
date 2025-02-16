@@ -67,6 +67,11 @@ class PowerVLE(Architecture):
     regs = {
         'lr': RegisterInfo("lr", 4, 0),
         'ctr': RegisterInfo("ctr", 4, 0),
+        'srr': RegisterInfo("srr", 4, 0),
+        'srr0': RegisterInfo("srr0", 4, 0),
+        'srr1': RegisterInfo("srr1", 4, 0),
+        'msr': RegisterInfo("msr", 4, 0),
+        'esr': RegisterInfo("esr", 4, 0),
         'r0': RegisterInfo("r0", 4, 0),
         'r1': RegisterInfo("r1", 4, 0),
         'r2': RegisterInfo("r2", 4, 0),
