@@ -9,6 +9,7 @@ from .instruction import (
     InstM, InstOIM5,
     InstR, InstRR,
     InstSCI8, InstSD4,
+    InstX, InstXL
 )
 
 from .utils import get_bits_from_int
@@ -248,6 +249,29 @@ class Decoder:
             0b011110: Level(6, 7, {
                 0: InstBD24("e_b", "VLE", ["target_addr", "LK"], branch=True),
                 1: InstBD15("e_bc", "VLE", ["BI32", "target_addr", "LK"], conditional_branch=True),
+            }),
+            0b011111: Level(27, 31, { # last XO bits (inst[27:31])
+                0x0: InstXL("e_mcrf", "VLE",  ["BF", "BFA"]),
+                0x1: Level(21, 26, { 
+                    0b00001: InstXL("e_crnor", "VLE",  ["BT", "BA", "BB"]),
+                    0b00100: InstXL("e_crandc", "VLE",  ["BT", "BA", "BB"]),
+                    0b00110: InstXL("e_crxor", "VLE",  ["BT", "BA", "BB"]),
+                    0b00111: InstXL("e_crnand", "VLE",  ["BT", "BA", "BB"]),
+                    0b01000: InstXL("e_crand", "VLE",  ["BT", "BA", "BB"]),
+                    0b01001: InstXL("e_creqv", "VLE",  ["BT", "BA", "BB"]),
+                    0b01101: InstXL("e_crorc", "VLE",  ["BT", "BA", "BB"]),
+                    0b01110: InstXL("e_cror", "VLE",  ["BT", "BA", "BB"]),
+                }),
+                0x8: Level(21, 26, { 
+                    0b00001: InstX("e_slwi", "VLE",  ["RA", "RS", "SH", "Rc"]),
+                    0b01000: InstX("e_rlw", "VLE",  ["RA", "RS", "RB", "Rc"]),
+                    0b01001: InstX("e_rlwi", "VLE",  ["RA", "RS", "SH", "Rc"]),
+                    0b10001: InstX("e_srwi", "VLE", ["RA", "RS", "SH", "Rc"]),
+                }),
+                0xE: Level(25, 26, { 
+                    0: InstX("e_cmph", "VLE",  ["BF", "RA", "RB"]),
+                    1: InstX("e_cmphl", "VLE",  ["BF", "RA", "RB"]),
+                }),
             }),
         }),
         
