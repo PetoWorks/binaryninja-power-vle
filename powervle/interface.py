@@ -312,7 +312,7 @@ class PowerVLE(Architecture):
 
         instruction = self.decode(data, addr)
         if not instruction:
-            il.append(il.undefined())
+            il.append(il.unimplemented())
             return 4
 
         if instruction.name in InstLiftTable and InstLiftTable[instruction.name]:

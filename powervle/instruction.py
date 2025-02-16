@@ -49,7 +49,7 @@ class Instruction:
             elif name == "BF32":
                 return f"cr{value}"
             elif name == "BI32":
-                return f"cr{value >> 3}"
+                return f"cr{value >> 2}"
             elif name == "BI16":
                 return f"cr0"
             elif name == "SD4":
@@ -104,9 +104,9 @@ class Instruction:
         if self.conditional_branch:
             mnemonic = mnemonic[:-1] + self.branch_condition
         if "LK" in self.operands:
-            mnemonic += "l" if self.get_operand_value("LK") else ""
+            mnemonic += "l" if self.get_operand_value("LK") == 1 else ""
         if "Rc" in self.operands:
-            mnemonic += "." if self.get_operand_value("Rc") else ""
+            mnemonic += "." if self.get_operand_value("Rc") == 1 else ""
         return mnemonic
 
     @property
@@ -125,7 +125,7 @@ class Instruction:
             ret = self.get_field_value("BI32")
             if ret == None:
                 ret = self.get_field_value("BI16")
-            return ret // 4
+            return ret >> 2
 
 
 def Inst(
