@@ -11,6 +11,8 @@ from .arithmetic import (lift_add_instructions,
                          lift_mul_instructions)
 from .compare import lift_compare_instructions
 from .load import lift_load_instructions
+from .move_sysreg import lift_move_sysreg_instructions
+from .store import lift_store_instructions
 from .multiple import lift_multiple_instructions
 
 InstLiftFuncType = Callable[[Instruction, LowLevelILFunction], None]
@@ -98,6 +100,19 @@ InstLiftTable: dict[str, InstLiftFuncType] = {
     "se_mfar"    : lift_logical_instructions,
     "se_mr"      : lift_logical_instructions,
     "se_mtar"    : lift_logical_instructions,
+    "se_mflr"    : lift_move_sysreg_instructions,
+    "se_mtlr"    : lift_move_sysreg_instructions,
+    "se_mfctr"   : lift_move_sysreg_instructions,
+    "se_mtctr"   : lift_move_sysreg_instructions,
+    "e_stb"      : lift_store_instructions,
+    "e_stbu"     : lift_store_instructions,
+    "e_sth"      : lift_store_instructions,
+    "e_sthu"     : lift_store_instructions,
+    "e_stw"      : lift_store_instructions,
+    "e_stwu"     : lift_store_instructions,
+    "se_stb"     : lift_store_instructions,
+    "se_sth"     : lift_store_instructions,
+    "se_stw"     : lift_store_instructions,
     "e_lmw"      : lift_multiple_instructions,
     "e_stmw"     : lift_multiple_instructions,
     "e_rlwimi"   : lift_shift_instructions,
