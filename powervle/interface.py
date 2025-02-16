@@ -1,5 +1,6 @@
 from typing import Tuple, List
 
+from binaryninja import Intrinsic, IntrinsicInfo, Type
 from binaryninja.log import log_warn, log_error, log_debug
 
 from binaryninja.architecture import (
@@ -58,6 +59,10 @@ class PowerVLE(Architecture):
     default_int_size = 4
     instr_alignment = 2
     max_instr_length = 4
+
+    intrinsics = {
+        'isync': IntrinsicInfo([], [])
+    }
 
     regs = {
         'lr': RegisterInfo("lr", 4, 0),
@@ -265,7 +270,7 @@ class PowerVLE(Architecture):
 
         instruction = self.decode(data, addr)
         if not instruction:
-            return [InstructionTextToken(InstructionTextTokenType.TextToken, "#UNAVAILABLE")], 4
+            return [InstructionTextToken(InstructionTextTokenType.InstructionToken, "illegal")], 4
 
         tokens = []
 
@@ -303,12 +308,13 @@ class PowerVLE(Architecture):
 
         instruction = self.decode(data, addr)
         if not instruction:
+            il.append(il.undefined())
             return 4
 
         if instruction.name in InstLiftTable and InstLiftTable[instruction.name]:
             InstLiftTable[instruction.name](instruction, il)
         else:
-            il.unimplemented()
+            il.append(il.unimplemented())
 
         return instruction.length
 

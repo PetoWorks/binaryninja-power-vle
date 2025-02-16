@@ -119,6 +119,14 @@ class Instruction:
                   (bi16 := self.get_field_value("BI16")) != None):
                 return self._bcmap[bo16][bi16]
 
+    @property
+    def branch_condition_index(self) -> int | None:
+        if self.conditional_branch:
+            ret = self.get_field_value("BI32")
+            if ret == None:
+                ret = self.get_field_value("BI16")
+            return ret // 4
+
 
 def Inst(
     name: str,

@@ -168,7 +168,7 @@ class Decoder:
                     }),
                 }),
                 0xB: InstSCI8("e_subfic", "VLE", ["RT", "RA", "sci8", "Rc"]),
-                0xC: InstSCI8("e_andi", "VLE", ["RT", "RS", "sci8", "Rc"]),
+                0xC: InstSCI8("e_andi", "VLE", ["RA", "RS", "sci8", "Rc"]),
                 0xD: InstSCI8("e_ori", "VLE", ["RA", "RS", "sci8", "Rc"]),
                 0xE: InstSCI8("e_xori", "VLE", ["RA", "RS", "sci8", "Rc"]),
             }),
