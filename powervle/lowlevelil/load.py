@@ -19,10 +19,10 @@ def lift_load_instructions(inst: Instruction, il: LowLevelILFunction) -> None:
                 il.append(il.undefined())
                 return
         if ra == 0:
-            EA = il.const(4, 0)
+            EA = il.const(4, d)
         else :
-            EA = il.reg(4, ra)
-        EA = il.add(4, EA, il.const(4, d))
+            EA = il.add(4, il.reg(4, ra), il.const(4, d))
+        
         ei0 = il.load(1, EA)
         ei0 = il.set_reg(4, rt, il.zero_extend(4, ei0))
         il.append(ei0)
@@ -44,10 +44,9 @@ def lift_load_instructions(inst: Instruction, il: LowLevelILFunction) -> None:
                 il.append(il.undefined())
                 return
         if ra == 0:
-            EA = il.const(4, 0)
+            EA = il.const(4, d)
         else :
-            EA = il.reg(4, ra)
-        EA = il.add(4, EA, il.const(4, d))
+            EA = il.add(4, il.reg(4, ra), il.const(4, d))
         ei0 = il.load(2, EA)
         if inst.name in ["e_lhz", "e_lhzu"]:
             ei0 = il.zero_extend(4, ei0)
@@ -93,10 +92,9 @@ def lift_load_instructions(inst: Instruction, il: LowLevelILFunction) -> None:
                 il.append(il.undefined())
                 return
         if ra == 0:
-            EA = il.const(4, 0)
+            EA = il.const(4, d)
         else :
-            EA = il.reg(4, ra)
-        EA = il.add(4, EA, il.const(4, d))
+            EA = il.add(4, il.reg(4, ra), il.const(4, d))
         ei0 = il.load(4, EA)
         ei0 = il.set_reg(4, rt, il.zero_extend(4, ei0))
         il.append(ei0)

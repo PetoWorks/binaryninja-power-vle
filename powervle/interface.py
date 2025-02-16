@@ -1,5 +1,6 @@
 from typing import Tuple, List
 
+from binaryninja import Intrinsic, IntrinsicInfo, Type
 from binaryninja.log import log_warn, log_error, log_debug
 
 from binaryninja.architecture import (
@@ -58,6 +59,10 @@ class PowerVLE(Architecture):
     default_int_size = 4
     instr_alignment = 2
     max_instr_length = 4
+
+    intrinsics = {
+        'isync': IntrinsicInfo([], [])
+    }
 
     regs = {
         'lr': RegisterInfo("lr", 4, 0),
@@ -351,3 +356,7 @@ class PowerVLE(Architecture):
                 return fn(size, left, write)
 
         return super().get_flag_write_low_level_il(op, size, write_type, flag, operands, il)
+    '''
+    def get_intrinsic_name(i: int) -> str:
+        return "foo"
+    '''
