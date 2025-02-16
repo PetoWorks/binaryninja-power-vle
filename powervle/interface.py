@@ -60,10 +60,6 @@ class PowerVLE(Architecture):
     instr_alignment = 2
     max_instr_length = 4
 
-    intrinsics = {
-        'isync': IntrinsicInfo([], [])
-    }
-
     regs = {
         'lr': RegisterInfo("lr", 4, 0),
         'ctr': RegisterInfo("ctr", 4, 0),
@@ -206,6 +202,14 @@ class PowerVLE(Architecture):
             'cr6lt', 'cr6gt', 'cr6eq', 'cr6so', 'cr7lt', 'cr7gt', 'cr7eq', 'cr7so',
             'xer_so', 'xer_ov', 'xer_ca'
         ]
+    }
+
+    intrinsics = {
+        'isync' : IntrinsicInfo([], []),
+        'rfi'   : IntrinsicInfo([], []),
+        'rfci'  : IntrinsicInfo([], []),
+        'rfdi'  : IntrinsicInfo([], []),
+        'rfmci' : IntrinsicInfo([], []),
     }
 
     categories = PowerCategory.VLE

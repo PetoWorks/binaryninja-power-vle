@@ -18,11 +18,13 @@ InstLiftFuncType = Callable[[Instruction, LowLevelILFunction], None]
 
 
 InstLiftTable: dict[str, InstLiftFuncType] = {
+    "se_illegal" : lambda inst, il: il.append(il.undefined()),
     "se_isync"   : lambda inst, il: il.append(il.intrinsic([], "isync", [])),
-    "se_rfi"     : lambda inst, il: il.append(il.ret(il.unimplemented())),
-    "se_rfci"    : None,
-    "se_rfdi"    : None,
-    "se_rfmci"   : None,
+    "se_sc"      : lambda inst, il: il.append(il.system_call()),
+    "se_rfi"     : lambda inst, il: il.append(il.intrinsic([], "rfi", [])),
+    "se_rfci"    : lambda inst, il: il.append(il.intrinsic([], "rfci", [])),
+    "se_rfdi"    : lambda inst, il: il.append(il.intrinsic([], "rfdi", [])),
+    "se_rfmci"   : lambda inst, il: il.append(il.intrinsic([], "rfmci", [])),
     "se_add"     : lift_add_instructions,
     "e_add16i"   : lift_add_instructions,
     "e_add2i"    : lift_add_instructions,
