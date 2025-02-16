@@ -43,7 +43,7 @@ def get_expr_op(
 
     elif len(operands) == 1:
         if op == LowLevelILOperation.LLIL_SET_REG:
-            return get_expr(operands[0], size)
+            return get_expr(il, operands[0], size)
 
     elif len(operands) <= 4:
         return il.expr(op, *[get_expr(il, opr, size) for opr in operands], size=size)
@@ -334,7 +334,7 @@ class PowerVLE(Architecture):
             return il.unimplemented()
 
         if write_type.startswith("cr"):
-            cond = write_type[-2:]
+            cond = flag[-2:]
             suf = write_type[-1]
             fn = None
 
