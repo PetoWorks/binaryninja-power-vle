@@ -12,6 +12,7 @@ from .load import lift_load_instructions
 from .move_sysreg import lift_move_sysreg_instructions
 from .store import lift_store_instructions
 from .multiple import lift_multiple_instructions
+from .branch import lift_branch_instructions, lift_cond_branch_instructions, lift_indirect_branch_instructions
 
 
 InstLiftFuncType = Callable[[Instruction, LowLevelILFunction], None] 
@@ -25,6 +26,12 @@ InstLiftTable: dict[str, InstLiftFuncType] = {
     "se_rfci"    : lambda inst, il: il.append(il.intrinsic([], "rfci", [])),
     "se_rfdi"    : lambda inst, il: il.append(il.intrinsic([], "rfdi", [])),
     "se_rfmci"   : lambda inst, il: il.append(il.intrinsic([], "rfmci", [])),
+    "e_b"        : lift_branch_instructions,
+    "se_b"       : lift_branch_instructions,
+    "e_bc"       : lift_cond_branch_instructions,
+    "se_bc"      : lift_cond_branch_instructions,
+    "se_blr"     : lift_indirect_branch_instructions,
+    "se_bctr"    : lift_indirect_branch_instructions,
     "se_add"     : lift_add_instructions,
     "e_add16i"   : lift_add_instructions,
     "e_add2i"    : lift_add_instructions,
