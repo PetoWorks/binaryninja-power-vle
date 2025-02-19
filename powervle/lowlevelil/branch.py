@@ -56,9 +56,6 @@ def lift_cond_branch_instructions(inst: Instruction, il: LowLevelILFunction) -> 
         cond = il.compare_equal(4, il.reg(4, "ctr"), il.const(4, 0))
     elif bc == "dnz":
         cond = il.compare_not_equal(4, il.reg(4, "ctr"), il.const(4, 0))
-    elif bc == "dnzt":
-        # Todo ?
-        il.append(il.unimplemented())
     else: 
         il.append(il.unimplemented())
         return
