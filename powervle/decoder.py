@@ -251,26 +251,28 @@ class Decoder:
                 1: InstBD15("e_bc", "VLE", ["BI32", "target_addr", "LK"], conditional_branch=True),
             }),
             0b011111: Level(27, 31, { # last XO bits (inst[27:31])
-                0x0: InstXL("e_mcrf", "VLE",  ["BF", "BFA"]),
-                0x1: Level(21, 26, { 
-                    0b00001: InstXL("e_crnor", "VLE",  ["BT", "BA", "BB"]),
-                    0b00100: InstXL("e_crandc", "VLE",  ["BT", "BA", "BB"]),
-                    0b00110: InstXL("e_crxor", "VLE",  ["BT", "BA", "BB"]),
-                    0b00111: InstXL("e_crnand", "VLE",  ["BT", "BA", "BB"]),
-                    0b01000: InstXL("e_crand", "VLE",  ["BT", "BA", "BB"]),
-                    0b01001: InstXL("e_creqv", "VLE",  ["BT", "BA", "BB"]),
-                    0b01101: InstXL("e_crorc", "VLE",  ["BT", "BA", "BB"]),
-                    0b01110: InstXL("e_cror", "VLE",  ["BT", "BA", "BB"]),
+                0x0: Level(21, 27, {
+                    0b000001: InstXL("e_mcrf", "VLE",  ["BF", "BFA"]),
                 }),
-                0x8: Level(21, 26, { 
-                    0b00001: InstX("e_slwi", "VLE",  ["RA", "RS", "SH", "Rc"]),
-                    0b01000: InstX("e_rlw", "VLE",  ["RA", "RS", "RB", "Rc"]),
-                    0b01001: InstX("e_rlwi", "VLE",  ["RA", "RS", "SH", "Rc"]),
-                    0b10001: InstX("e_srwi", "VLE", ["RA", "RS", "SH", "Rc"]),
+                0x1: Level(21, 27, { 
+                    0b000010: InstXL("e_crnor", "VLE",  ["BT", "BA", "BB"]),
+                    0b001000: InstXL("e_crandc", "VLE",  ["BT", "BA", "BB"]),
+                    0b001100: InstXL("e_crxor", "VLE",  ["BT", "BA", "BB"]),
+                    0b001110: InstXL("e_crnand", "VLE",  ["BT", "BA", "BB"]),
+                    0b010000: InstXL("e_crand", "VLE",  ["BT", "BA", "BB"]),
+                    0b010010: InstXL("e_creqv", "VLE",  ["BT", "BA", "BB"]),
+                    0b011010: InstXL("e_crorc", "VLE",  ["BT", "BA", "BB"]),
+                    0b011100: InstXL("e_cror", "VLE",  ["BT", "BA", "BB"]),
                 }),
-                0xE: Level(25, 26, { 
-                    0: InstX("e_cmph", "VLE",  ["BF", "RA", "RB"]),
-                    1: InstX("e_cmphl", "VLE",  ["BF", "RA", "RB"]),
+                0x8: Level(21, 27, { 
+                    0b000011: InstX("e_slwi", "VLE",  ["RA", "RS", "SH", "Rc"]),
+                    0b010001: InstX("e_rlw", "VLE",  ["RA", "RS", "RB", "Rc"]),
+                    0b010011: InstX("e_rlwi", "VLE",  ["RA", "RS", "SH", "Rc"]),
+                    0b100011: InstX("e_srwi", "VLE", ["RA", "RS", "SH", "Rc"]),
+                }),
+                0xE: Level(21, 27, { 
+                    0b000000: InstX("e_cmph", "VLE",  ["BF", "RA", "RB"]),
+                    0b000010: InstX("e_cmphl", "VLE",  ["BF", "RA", "RB"]),
                 }),
             }),
         }),
