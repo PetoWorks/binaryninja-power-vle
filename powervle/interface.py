@@ -9,6 +9,10 @@ from binaryninja.architecture import (
     InstructionInfo, InstructionTextToken
 )
 
+from binaryninja.callingconvention import (
+    CallingConvention
+)
+
 from binaryninja.lowlevelil import (
     ILRegisterType, ExpressionIndex,
     LowLevelILFunction, ILRegister, ILFlag,
@@ -99,7 +103,7 @@ class PowerVLE(Architecture):
         'r28': RegisterInfo("r28", 4, 0),
         'r29': RegisterInfo("r29", 4, 0),
         'r30': RegisterInfo("r30", 4, 0),
-        'r31': RegisterInfo("r31", 4, 0),
+        'r31': RegisterInfo("r31", 4, 0)
     }
 
     stack_pointer = "r1"
@@ -366,3 +370,18 @@ class PowerVLE(Architecture):
                 return fn(size, left, write)
 
         return super().get_flag_write_low_level_il(op, size, write_type, flag, operands, il)
+
+class DefaultCallingConvention(CallingConvention):
+    name = 'default'
+    # dedicated: r1, r2, r13
+
+    # Nonvolatile registers
+    callee_saved_regs = ['r14', 'r15', 'r16', 'r17', 'r18', 'r19', 'r20', 'r21', 'r22',
+                         'r23', 'r24', 'r25', 'r26', 'r27', 'r28', 'r29', 'r30', 'r31']
+    # Volatile registers
+    caller_saved_regs = ['r0', 'r3', 'r4', 'r5', 'r6', 'r7', 'r8', 'r9', 'r10', 'r11', 'r12', 'lr', 'ctr']
+ 
+    int_arg_regs = ['r3', 'r4', 'r5', 'r6', 'r7', 'r8', 'r9', 'r10']
+    
+    int_return_reg = 'r3'
+    high_int_return_reg = 'r4'
