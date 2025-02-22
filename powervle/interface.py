@@ -93,6 +93,40 @@ class PowerVLE(Architecture):
         'r29': RegisterInfo("r29", 4, 0),
         'r30': RegisterInfo("r30", 4, 0),
         'r31': RegisterInfo("r31", 4, 0),
+        # Vector Registers
+        'v0': RegisterInfo("v0", 16, 0),
+        'v1': RegisterInfo("v1", 16, 0),
+        'v2': RegisterInfo("v2", 16, 0),
+        'v3': RegisterInfo("v3", 16, 0),
+        'v4': RegisterInfo("v4", 16, 0),
+        'v5': RegisterInfo("v5", 16, 0),
+        'v6': RegisterInfo("v6", 16, 0),
+        'v7': RegisterInfo("v7", 16, 0),
+        'v8': RegisterInfo("v8", 16, 0),
+        'v9': RegisterInfo("v9", 16, 0),
+        'v10': RegisterInfo("v10", 16, 0),
+        'v11': RegisterInfo("v11", 16, 0),
+        'v12': RegisterInfo("v12", 16, 0),
+        'v13': RegisterInfo("v13", 16, 0),
+        'v14': RegisterInfo("v14", 16, 0),
+        'v15': RegisterInfo("v15", 16, 0),
+        'v16': RegisterInfo("v16", 16, 0),
+        'v17': RegisterInfo("v17", 16, 0),
+        'v18': RegisterInfo("v18", 16, 0),
+        'v19': RegisterInfo("v19", 16, 0),
+        'v20': RegisterInfo("v20", 16, 0),
+        'v21': RegisterInfo("v21", 16, 0),
+        'v22': RegisterInfo("v22", 16, 0),
+        'v23': RegisterInfo("v23", 16, 0),
+        'v24': RegisterInfo("v24", 16, 0),
+        'v25': RegisterInfo("v25", 16, 0),
+        'v26': RegisterInfo("v26", 16, 0),
+        'v27': RegisterInfo("v27", 16, 0),
+        'v28': RegisterInfo("v28", 16, 0),
+        'v29': RegisterInfo("v29", 16, 0),
+        'v30': RegisterInfo("v30", 16, 0),
+        'v31': RegisterInfo("v31", 16, 0),
+        'vscr': RegisterInfo("vscr", 4, 0),
     }
 
     stack_pointer = "r1"
@@ -197,7 +231,7 @@ class PowerVLE(Architecture):
         ]
     }
 
-    categories = PowerCategory.VLE
+    categories = [PowerCategory.VLE, PowerCategory.V]
 
     def __init__(self):
         super().__init__()

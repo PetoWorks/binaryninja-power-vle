@@ -9,6 +9,8 @@ from .instruction import (
     InstM, InstOIM5,
     InstR, InstRR,
     InstSCI8, InstSD4,
+    InstX,
+    InstVX, InstVA
 )
 
 from .utils import get_bits_from_int
@@ -265,9 +267,284 @@ class Decoder:
     })
 
     VLE_INST_EXTRA = {
-        PowerCategory.SP: Level(0, 4, {}),
-        PowerCategory.V: Level(0, 4, {}),
-    }
+        # PowerCategory.SP: Level(0, 4, {}),
+        PowerCategory.V: Level(0, 4, {  # opcode primary bits level (inst[0:6])
+        0x1: Level(4, 6, { # opcode secondary bits level (inst[4:6])
+            0b00: Level(21, 24, { # First XO 3-bits inst[21:24]
+                0x0: Level(24, 28, { # Second XO 4-bits inst[24:28]
+                    0x0: Level(28, 32, { # Last XO 4-bits inst[28:32]
+                        0x0: InstVX("vaddubm", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x2: InstVX("vmaxub", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x4: InstVX("vrlb", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x6: InstVX("vcmpequb", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x8: InstVX("vmuloub", "VEC", ["VRT", "VRA", "VRB"]),
+                        0xA: InstVX("vaddfp", "VEC", ["VRT", "VRA", "VRB"]),
+                        0xC: InstVX("vmrghb", "VEC", ["VRT", "VRA", "VRB"]),
+                        0xE: InstVX("vpkuhum", "VEC", ["VRT", "VRA", "VRB"]),
+                    }),
+                    0x2: Level(28, 32, {
+                        0x0: InstVA("vmhaddshs", "VEC", ["VRT", "VRA", "VRB", "VRC"]),
+                        0x1: InstVA("vmhraddshs", "VEC", ["VRT", "VRA", "VRB", "VRC"]),
+                        0x2: InstVA("vmladduhm", "VEC", ["VRT", "VRA", "VRB", "VRC"]),
+                        0x4: InstVA("vmsumubm", "VEC", ["VRT", "VRA", "VRB", "VRC"]),
+                        0x5: InstVA("vmsummbm", "VEC", ["VRT", "VRA", "VRB", "VRC"]),
+                        0x6: InstVA("vmsumuhm", "VEC", ["VRT", "VRA", "VRB", "VRC"]),
+                        0x7: InstVA("vmsumuhs", "VEC", ["VRT", "VRA", "VRB", "VRC"]),
+                        0x8: InstVA("vmsumshm", "VEC", ["VRT", "VRA", "VRB", "VRC"]),
+                        0x9: InstVA("vmsumshs", "VEC", ["VRT", "VRA", "VRB", "VRC"]),
+                        0xA: InstVA("vsel", "VEC", ["VRT", "VRA", "VRB", "VRC"]),
+                        0xB: InstVA("vperm", "VEC", ["VRT", "VRA", "VRB", "VRC"]),
+                        0xC: InstVA("vsldoi", "VEC", ["VRT", "VRA", "VRB", "SHB"]),
+                        0xE: InstVA("vmaddfp", "VEC", ["VRT", "VRA", "VRC", "VRB"]),
+                        0xF: InstVA("vnmsubfp", "VEC", ["VRT", "VRA", "VRC", "VRB"]),
+                    }),
+
+                0x4: Level(28, 32, {
+                    0x0: InstVX("vadduhm", "VEC", ["VRT", "VRA", "VRB"]),
+                    0x2: InstVX("vmaxuh", "VEC", ["VRT", "VRA", "VRB"]),
+                    0x4: InstVX("vrlh", "VEC", ["VRT", "VRA", "VRB"]),
+                    0x6: InstVX("vcmpequh", "VEC", ["VRT", "VRA", "VRB"]),
+                    0x8: InstVX("vmulouh", "VEC", ["VRT", "VRA", "VRB"]),
+                    0xA: InstVX("vsubfp", "VEC", ["VRT", "VRA", "VRB"]),
+                    0xC: InstVX("vmrghh", "VEC", ["VRT", "VRA", "VRB"]),
+                    0xE: InstVX("vpkuwum", "VEC", ["VRT", "VRA", "VRB"]),
+                }),
+
+                0x8: Level(28, 32, {
+                    0x0: InstVX("vadduwm", "VEC", ["VRT", "VRA", "VRB"]),
+                    0x2: InstVX("vmaxuw", "VEC", ["VRT", "VRA", "VRB"]),
+                    0x4: InstVX("vrlw", "VEC", ["VRT", "VRA", "VRB"]),
+                    0x6: InstVX("vcmpequw", "VEC", ["VRT", "VRA", "VRB"]),
+                    0xC: InstVX("vmrghw", "VEC", ["VRT", "VRA", "VRB"]),
+                    0xE: InstVX("vpkuhus", "VEC", ["VRT", "VRA", "VRB"]),
+                }),
+
+                0xC: Level(28, 32, {
+                    0x6: InstVX("vcmpeqfp", "VEC", ["VRT", "VRA", "VRB"]),
+                    0xE: InstVX("vpkuwus", "VEC", ["VRT", "VRA", "VRB"]),
+                    })
+                }),
+                
+                0x1: Level(24, 28, {
+                    0x0: Level(28, 32, {
+                        0x2: InstVX("vmaxsb", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x4: InstVX("vslb", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x8: InstVX("vmulosb", "VEC", ["VRT", "VRA", "VRB"]),
+                        0xA: InstVX("vrefp", "VEC", ["VRT", "VRB"]),
+                        0xC: InstVX("vmrglb", "VEC", ["VRT", "VRA", "VRB"]),
+                        0xE: InstVX("vpkshus", "VEC", ["VRT", "VRA", "VRB"]),
+                    }),
+
+                    0x4: Level(28, 32, {
+                        0x2: InstVX("vmaxsh", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x4: InstVX("vslh", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x8: InstVX("vmulosh", "VEC", ["VRT", "VRA", "VRB"]),
+                        0xA: InstVX("vrsqrtefp", "VEC", ["VRT", "VRB"]),
+                        0xC: InstVX("vmrglh", "VEC", ["VRT", "VRA", "VRB"]),
+                        0xE: InstVX("vpkswus", "VEC", ["VRT", "VRA", "VRB"]),
+                    }),
+
+                    0x8: Level(28, 32, {
+                        0x0: InstVX("vaddcuw", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x2: InstVX("vmaxsw", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x4: InstVX("vslw", "VEC", ["VRT", "VRA", "VRB"]),
+                        0xA: InstVX("vexptefp", "VEC", ["VRT", "VRB"]),
+                        0xC: InstVX("vmrglw", "VEC", ["VRT", "VRA", "VRB"]),
+                        0xE: InstVX("vpkshss", "VEC", ["VRT", "VRA", "VRB"]),
+                    }),
+
+                    0xC: Level(28, 32, {
+                        0x4: InstVX("vsl", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x6: InstVX("vcmpgefp", "VEC", ["VRT", "VRA", "VRB"]),
+                        0xA: InstVX("vlogefp", "VEC", ["VRT", "VRB"]),
+                        0xE: InstVX("vpkswss", "VEC", ["VRT", "VRA", "VRB"]),
+                    })
+                }),
+
+                0x2: Level(24, 28, { 
+                    0x0: Level(28, 32, { 
+                        0x0: InstVX("vaddubs", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x2: InstVX("vminub", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x4: InstVX("vsrb", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x6: InstVX("vcmpgtub", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x8: InstVX("vmuleub", "VEC", ["VRT", "VRA", "VRB"]),
+                        0xA: InstVX("vrfin", "VEC", ["VRT", "VRB"]),
+                        0xC: InstVX("vspltb", "VEC", ["VRT", "VRB", "UIM"]),
+                        0xE: InstVX("vupkhsb", "VEC", ["VRT", "VRB"]),
+                    }),
+                        
+                    0x4: Level(28, 32, {
+                        0x0: InstVX("vadduhs", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x2: InstVX("vminuh", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x4: InstVX("vsrh", "VEC", ["VRT", "VRA", "VRB"]), 
+                        0x6: InstVX("vcmpgtuh", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x8: InstVX("vmuleuh", "VEC", ["VRT", "VRA", "VRB"]),
+                        0xA: InstVX("vrfiz", "VEC", ["VRT", "VRB"]),
+                        0xC: InstVX("vsplth", "VEC", ["VRT", "VRB", "UIM"]),
+                        0xE: InstVX("vupkhsh", "VEC", ["VRT", "VRB"]),
+                    }),
+                        
+                    0x8: Level(28, 32, {
+                        0x0: InstVX("vadduws", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x2: InstVX("vminuw", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x4: InstVX("vsrw", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x6: InstVX("vcmpgtuw", "VEC", ["VRT", "VRA", "VRB"]),
+                        0xA: InstVX("vrfip", "VEC", ["VRT", "VRB"]),
+                        0xC: InstVX("vspltw", "VEC", ["VRT", "VRB", "UIM"]),
+                        0xE: InstVX("vupklsb", "VEC", ["VRT", "VRB"]),
+                    }),
+
+                    0xC: Level(28, 32, {
+                        0x4: InstVX("vsr", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x6: InstVX("vcmpgtfp", "VEC", ["VRT", "VRA", "VRB"]),
+                        0xA: InstVX("vrfim", "VEC", ["VRT", "VRB"]),
+                        0xE: InstVX("vupklsh", "VEC", ["VRT", "VRB"]),
+                    })
+                }),
+
+                0x3: Level(24, 28, {
+                    0x0: Level(28, 32, {
+                        0x0: InstVX("vaddsbs", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x2: InstVX("vminsb", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x4: InstVX("vsrab", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x6: InstVX("vcmpgtsb", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x8: InstVX("vmulesb", "VEC", ["VRT", "VRA", "VRB"]),
+                        0xA: InstVX("vcuxwfp", "VEC", ["VRT", "VRB" "UIM"]),
+                        0xC: InstVX("vspltisb", "VEC", ["VRT", "SIM"]),
+                        0xE: InstVX("vpkpx", "VEC", ["VRT", "VRA", "VRB"]),
+                    }),
+
+                    0x4: Level(28, 32, {
+                        0x0: InstVX("vaddshs", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x2: InstVX("vminsh", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x4: InstVX("vsrah", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x6: InstVX("vcmpgtsh", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x8: InstVX("vmulesh", "VEC", ["VRT", "VRA", "VRB"]),
+                        0xA: InstVX("vcsxwfp", "VEC", ["VRT", "VRB", "UIM"]),
+                        0xC: InstVX("vspltish", "VEC", ["VRT", "SIM"]),
+                        0xE: InstVX("vupkhpx", "VEC", ["VRT", "VRB"]),
+                    }),
+
+                    0x8: Level(28, 32, {
+                        0x0: InstVX("vaddsws", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x2: InstVX("vminsw", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x4: InstVX("vsraw", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x6: InstVX("vcmpgtsw", "VEC", ["VRT", "VRA", "VRB"]),
+                        0xA: InstVX("vcfpuxws", "VEC", ["VRT", "VRB", "UIM"]),
+                        0xC: InstVX("vspltisw", "VEC", ["VRT", "SIM"]),
+                    }),
+
+                    0xC: Level(28, 32, {
+                        0x6: InstVX("vcmpbfp", "VEC", ["VRT", "VRA", "VRB"]),
+                        0xA: InstVX("vcfpsxws", "VEC", ["VRT", "VRB", "UIM"]),
+                        0xE: InstVX("vupklpx", "VEC", ["VRT", "VRB"]),
+                    })
+                }),
+
+                0x4: Level(24, 28, {
+                    0x0: Level(28, 32, {
+                        0x0: InstVX("vsububm", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x2: InstVX("vavgub", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x4: InstVX("vand", "VEC", ["VRT", "VRA", "VRB"]),
+                        0xA: InstVX("vmaxfp", "VEC", ["VRT", "VRA", "VRB"]),
+                        0xC: InstVX("vslo", "VEC", ["VRT", "VRA", "VRB"]),
+                    }),
+
+                    0x4: Level(28, 32, {
+                        0x0: InstVX("vsubuhm", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x2: InstVX("vavguh", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x4: InstVX("vandc", "VEC", ["VRT", "VRA", "VRB"]),
+                        0xA: InstVX("vminfp", "VEC", ["VRT", "VRA", "VRB"]),
+                        0xC: InstVX("vsro", "VEC", ["VRT", "VRA", "VRB"]),
+                    }),
+
+                    0x8: Level(28, 32, {
+                        0x0: InstVX("vsubuwm", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x2: InstVX("vavguw", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x4: InstVX("vor", "VEC", ["VRT", "VRA", "VRB"]),
+                    }),
+
+                    0xC: Level(28, 32, {
+                        0x4: InstVX("vxor", "VEC", ["VRT", "VRA", "VRB"]),
+                    }) 
+                }),
+
+                0x5: Level(24, 28, {
+                    0x0: Level(28, 32, {
+                        0x2: InstVX("vavgsb", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x4: InstVX("vnor", "VEC", ["VRT", "VRA", "VRB"]),
+                    }),
+
+                    0x4: Level(28, 32, {
+                        0x2: InstVX("vavgsh", "VEC", ["VRT", "VRA", "VRB"]),
+                    }),
+
+                    0x8: Level(28, 32, {
+                        0x0: InstVX("vsubcuw", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x2: InstVX("vavgsw", "VEC", ["VRT", "VRA", "VRB"]),
+                    })
+                }),
+
+                0x6: Level(24, 28, {
+                    0x0: Level(28, 32, {
+                        0x0: InstVX("vsububs", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x4: InstVX("mfvscr", "VEC", ["VRT"]),
+                        0x8: InstVX("vsum4ubs", "VEC", ["VRT", "VRA", "VRB"]),
+                    }),
+
+                    0x4: Level(28, 32, {
+                        0x0: InstVX("vsubuhs", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x4: InstVX("mtvscr", "VEC", ["VRB"]),
+                        0x8: InstVX("vsum4shs", "VEC", ["VRT", "VRA", "VRB"]),
+                    }),
+
+                    0x8: Level(28, 32, {
+                        0x0: InstVX("vsubuws", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x8: InstVX("vsum2sws", "VEC", ["VRT", "VRA", "VRB"]),
+                    })
+                }),
+
+                0x7: Level(24, 28, {
+                    0x0: Level(28, 32, {
+                        0x0: InstVX("vsubsbs", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x8: InstVX("vsum4sbs", "VEC", ["VRT", "VRA", "VRB"]),
+                    }),
+
+                    0x4: Level(28, 32, {
+                        0x0: InstVX("vsubshs", "VEC", ["VRT", "VRA", "VRB"]),
+                    }),
+
+                    0x8: Level(28, 32, {
+                        0x0: InstVX("vsubsws", "VEC", ["VRT", "VRA", "VRB"]),
+                        0x8: InstVX("vsumsws", "VEC", ["VRT", "VRA", "VRB"]),
+                    })
+                })
+            })
+        }),
+        0x7: Level(0, 6, {  # entire opcode level (inst[0:6])
+            0b011111: Level(21, 24, { # First XO 3-bits inst[21:24]
+                0x0: Level(24, 31, { # Second and last XO 4-bits inst[24:31]
+                    0b0000111: InstX("lvebx", "VEC", ["VRT", "RA", "RB"]),  
+                    0b0100111: InstX("lvehx", "VEC", ["VRT", "RA", "RB"]),
+                    0b1000111: InstX("lvewx", "VEC", ["VRT", "RA", "RB"]),
+                    0b1100111: InstX("lvx", "VEC", ["VRT", "RA", "RB"]),
+                }),
+                0x1: Level(24, 31, {
+                    0b0100111: InstX("stvehx", "VEC", ["VRS", "RA", "RB"]),
+                    0b1000111: InstX("stvewx", "VEC", ["VRS", "RA", "RB"]),
+                    0b0011111: InstX("stvx", "VEC", ["VRS", "RA", "RB"]),
+                }),
+                0x2: Level(24, 31, {
+                    0b1100111: InstX("lvxl", "VEC", ["VRT", "RA", "RB"]),
+                    0b0000111: InstX("stvebx", "VEC", ["VRS", "RA", "RB"]),
+                }),
+                0x3: Level(24, 31, {
+                    0b1100111: InstX("stvxl", "VEC", ["VRS", "RA", "RB"]),
+                })
+            })
+        }),
+    }),
+}
 
     def __init__(self, categories: PowerCategory = None):
         self.map = Decoder.VLE_INST_TABLE.map()
