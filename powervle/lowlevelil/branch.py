@@ -68,10 +68,6 @@ def lift_cond_branch_instructions(inst: Instruction, il: LowLevelILFunction) -> 
     if inst.get_operand_value("LK") == 1:
         il.append(il.set_reg(il.arch.address_size, "lr", il.const_pointer(il.arch.address_size, next_address)))
     
-    # cond = il.flag(f"cr{crnum}{flag}")
-    # if negate:
-    #     cond = il.not_expr(0, cond)
-    
     new_true_label = False
     true_label = il.get_label_for_address(il.arch, target_address)
     if true_label == None:
