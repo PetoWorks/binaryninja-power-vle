@@ -9,7 +9,9 @@ from .instruction import (
     InstM, InstOIM5,
     InstR, InstRR,
     InstSCI8, InstSD4,
-    InstX, InstXL
+    InstX, InstXL,
+    InstEVX, InstEVS, InstXFX, InstXO,
+    InstA
 )
 
 from .utils import get_bits_from_int
@@ -289,8 +291,514 @@ class Decoder:
     })
 
     VLE_INST_EXTRA = {
-        PowerCategory.SP: Level(0, 4, {}),
-        PowerCategory.V: Level(0, 4, {}),
+        # SPE Category : SP, SP.FV, SP.FS, SP.FD
+        PowerCategory.SP: Level(0, 4, { # opcode primary bits level (inst[0:6])
+            0x1: Level(4, 6, {  # opcode secondary bits level (inst[4:6])
+                0b00: Level(21, 24, { # First XO 3-bits inst[21:24]
+                    0x2: Level(24, 28, { # Second XO 4-bits inst[24:28]
+                        0x0: Level(28, 32, {    # Last XO 4-bits inst[28:32]
+                            0x0: InstEVX("evaddw", "SP", ["RT", "RA", "RB"]),
+                            0x2: InstEVX("evaddiw", "SP", ["RT", "RB", "UI_11_16"]),
+                            0x4: InstEVX("evsubfw", "SP", ["RT", "RA", "RB"]),
+                            0x6: InstEVX("evsubifw", "SP", ["RT", "UI_11_16", "RB"]),
+                            0x8: InstEVX("evabs", "SP", ["RT", "RA"]),
+                            0x9: InstEVX("evneg", "SP", ["RT", "RA"]),
+                            0xA: InstEVX("evextsb", "SP", ["RT", "RA"]),
+                            0xB: InstEVX("evextsh", "SP", ["RT", "RA"]),
+                            0xC: InstEVX("evrndw", "SP", ["RT", "RA"]),
+                            0xD: InstEVX("evcntlzw", "SP", ["RT", "RA"]),
+                            0xE: InstEVX("evcntlsw", "SP", ["RT", "RA"]),
+                            0xF: InstEVX("brinc", "SP", ["RT", "RA", "RB"]),
+                        }),
+                        0x1: Level(28, 32, {
+                            0x1: InstEVX("evand", "SP", ["RT", "RA", "RB"]),
+                            0x2: InstEVX("evandc", "SP", ["RT", "RA", "RB"]),
+                            0x6: InstEVX("evxor", "SP", ["RT", "RA", "RB"]),
+                            0x7: InstEVX("evor", "SP", ["RT", "RA", "RB"]),
+                            0x8: InstEVX("evnor", "SP", ["RT", "RA", "RB"]),
+                            0x9: InstEVX("eveqv", "SP", ["RT", "RA", "RB"]),
+                            0xB: InstEVX("evorc", "SP", ["RT", "RA", "RB"]),
+                            0xE: InstEVX("evnand", "SP", ["RT", "RA", "RB"]),
+                        }),
+
+                        0x2: Level(28, 32, {
+                            0x0: InstEVX("evsrwu", "SP", ["RT", "RA", "RB"]),
+                            0x1: InstEVX("evsrws", "SP", ["RT", "RA", "RB"]),
+                            0x2: InstEVX("evsrwiu", "SP", ["RT", "RA", "UI_16_21"]),
+                            0x3: InstEVX("evsrwis", "SP", ["RT", "RA", "UI_16_21"]),
+                            0x4: InstEVX("evslw", "SP", ["RT", "RA", "RB"]),
+                            0x6: InstEVX("evslwi", "SP", ["RT", "RA", "UI_16_21"]),
+                            0x8: InstEVX("evrlw", "SP", ["RT", "RA", "RB"]),
+                            0x9: InstEVX("evsplati", "SP", ["RT", "SI"]),
+                            0xA: InstEVX("evrlwi", "SP", ["RT", "RA", "UI_16_21"]),
+                            0xB: InstEVX("evsplatfi", "SP", ["RT", "SI"]),
+                            0xC: InstEVX("evmergehi", "SP", ["RT", "RA", "RB"]),
+                            0xD: InstEVX("evmergelo", "SP", ["RT", "RA", "RB"]),
+                            0xE: InstEVX("evmergehilo", "SP", ["RT", "RA", "RB"]),
+                            0xF: InstEVX("evmergelohi", "SP", ["RT", "RA", "RB"]),
+                        }),
+
+                        0x3: Level(28, 32, {
+                            0x0: InstEVX("evcmpltu", "SP", ["BF", "RA", "RB"]),
+                            0x1: InstEVX("evcmpgts", "SP", ["BF", "RA", "RB"]),
+                            0x2: InstEVX("evcmpgtu", "SP", ["BF", "RA", "RB"]),
+                            0x3: InstEVX("evcmplts", "SP", ["BF", "RA", "RB"]),
+                            0x4: InstEVX("evcmpeq", "SP", ["BF", "RA", "RB"]),
+                        }),
+                        
+                        0x7: Level(28, 29, { # EVS Form - Last XO 1-bit inst[28:29]
+                            0x1: InstEVS("evsel", "SP", ["RT", "RA", "RB", "BFA"]),
+                        }),
+
+                        # SP.FV
+                        0x8: Level(28, 32, {
+                            0x0: InstEVX("evfsadd", "SP.FV", ["RT", "RA", "RB"]),
+                            0x1: InstEVX("evfssub", "SP.FV", ["RT", "RA", "RB"]),
+                            0x4: InstEVX("evfsabs", "SP.FV", ["RT", "RA"]),
+                            0x5: InstEVX("evfsnabs", "SP.FV", ["RT", "RA"]),
+                            0x6: InstEVX("evfsneg", "SP.FV", ["RT", "RA"]),
+                            0x8: InstEVX("evfsmul", "SP.FV", ["RT", "RA", "RB"]),
+                            0x9: InstEVX("evfsdiv", "SP.FV", ["RT", "RA", "RB"]),
+                            0xC: InstEVX("evfscmpgt", "SP.FV", ["BF", "RA", "RB"]),
+                            0xD: InstEVX("evfscmplt", "SP.FV", ["BF", "RA", "RB"]),
+                            0xE: InstEVX("evfscmpeq", "SP.FV", ["BF", "RA", "RB"]),
+                        }),
+
+                        0x9: Level(28, 32, {
+                            0x0: InstEVX("evfscfui", "SP.FV", ["RT", "RB"]),
+                            0x1: InstEVX("evfscfsi", "SP.FV", ["RT", "RB"]),
+                            0x2: InstEVX("evfscfuf", "SP.FV", ["RT", "RB"]),
+                            0x3: InstEVX("evfscfsf", "SP.FV", ["RT", "RB"]),
+                            0x4: InstEVX("evfsctui", "SP.FV", ["RT", "RB"]),
+                            0x5: InstEVX("evfsctsi", "SP.FV", ["RT", "RB"]),
+                            0x6: InstEVX("evfsctuf", "SP.FV", ["RT", "RB"]),
+                            0x7: InstEVX("evfsctsf", "SP.FV", ["RT", "RB"]),
+                            0x8: InstEVX("evfsctuiz", "SP.FV", ["RT", "RB"]),
+                            0xA: InstEVX("evfsctsiz", "SP.FV", ["RT", "RB"]),
+                            0xC: InstEVX("evfststgt", "SP.FV", ["BF", "RA", "RB"]),
+                            0xD: InstEVX("evfststlt", "SP.FV", ["BF", "RA", "RB"]),
+                            0xE: InstEVX("evfststeq", "SP.FV", ["BF", "RA", "RB"]),
+                        }),
+
+                        0xC: Level(28, 32, {
+                            0x0: InstEVX("efsadd", "SP.FS", ["RT", "RA", "RB"]),
+                            0x1: InstEVX("efssub", "SP.FS", ["RT", "RA", "RB"]),
+                            # 0x2E2: InstEVX("efscfuid", "SP.FS", []), # No Instruction Info
+                            # 0x2E3: InstEVX("efscfsid", "SP.FS", []), # No Instruction Info
+                            0x4: InstEVX("efsabs", "SP.FS", ["RT", "RA"]),
+                            0x5: InstEVX("efsnabs", "SP.FS", ["RT", "RA"]),
+                            0x6: InstEVX("efsneg", "SP.FS", ["RT", "RA"]),
+                            0x8: InstEVX("efsmul", "SP.FS", ["RT", "RA", "RB"]),
+                            0x9: InstEVX("efsdiv", "SP.FS", ["RT", "RA", "RB"]),
+                            # 0x2EA: InstEVX("efsctuidz", "SP.FS", []), # No Instruction Info
+                            # 0x2EB: InstEVX("efsctsidz", "SP.FS", []), # No Instruction Info
+                            0xC: InstEVX("efscmpgt", "SP.FS", ["BF", "RA", "RB"]),
+                            0xD: InstEVX("efscmplt", "SP.FS", ["BF", "RA", "RB"]),
+                            0xE: InstEVX("efscmpeq", "SP.FS", ["BF", "RA", "RB"]),
+                            0xF: InstEVX("efscfd", "SP.FD", ["RT", "RB"]),
+                        }),
+
+                        0xD: Level(28, 32, {
+                            0x0: InstEVX("efscfui", "SP.FS", ["RT", "RB"]),
+                            0x1: InstEVX("efscfsi", "SP.FS", ["RT", "RB"]),
+                            0x2: InstEVX("efscfuf", "SP.FS", ["RT", "RB"]),
+                            0x3: InstEVX("efscfsf", "SP.FS", ["RT", "RB"]),
+                            0x4: InstEVX("efsctui", "SP.FS", ["RT", "RB"]),
+                            0x5: InstEVX("efsctsi", "SP.FS", ["RT", "RB"]),
+                            0x6: InstEVX("efsctuf", "SP.FS", ["RT", "RB"]),
+                            0x7: InstEVX("efsctsf", "SP.FS", ["RT", "RB"]),
+                            0x8: InstEVX("efsctuiz", "SP.FS", ["RT", "RB"]),
+                            0xA: InstEVX("efsctsiz", "SP.FS", ["RT", "RB"]),
+                            0xC: InstEVX("efststgt", "SP.FS", ["BF", "RA", "RB"]),
+                            0xD: InstEVX("efststlt", "SP.FS", ["BF", "RA", "RB"]),
+                            0xE: InstEVX("efststeq", "SP.FS", ["BF", "RA", "RB"]),
+                        }),
+
+                        0xE: Level(28, 32, {
+                            0x0: InstEVX("efdadd", "SP.FD", ["RT", "RA", "RB"]),
+                            0x1: InstEVX("efdsub", "SP.FD", ["RT", "RA", "RB"]),
+                            0x2: InstEVX("efdcfuid", "SP.FD", ["RT", "RB"]),
+                            0x3: InstEVX("efdcfsid", "SP.FD", ["RT", "RB"]),
+                            0x4: InstEVX("efdabs", "SP.FD", ["RT", "RA"]),
+                            0x5: InstEVX("efdnabs", "SP.FD", ["RT", "RA"]),
+                            0x6: InstEVX("efdneg", "SP.FD", ["RT", "RA"]),
+                            0x8: InstEVX("efdmul", "SP.FD", ["RT", "RA", "RB"]),
+                            0x9: InstEVX("efddiv", "SP.FD", ["RT", "RA", "RB"]),
+                            0xA: InstEVX("efdctuidz", "SP.FD", ["RT", "RB"]),
+                            0xB: InstEVX("efdctsidz", "SP.FD", ["RT", "RB"]),
+                            0xC: InstEVX("efdcmpgt", "SP.FD", ["BF", "RA", "RB"]),
+                            0xD: InstEVX("efdcmplt", "SP.FD", ["BF", "RA", "RB"]),
+                            0xE: InstEVX("efdcmpeq", "SP.FD", ["BF", "RA", "RB"]),
+                            0xF: InstEVX("efdcfs", "SP.FD", ["RT", "RB"]),
+                        }),
+
+                        0xF: Level(28, 32, {
+                            0x0: InstEVX("efdcfui", "SP.FD", ["RT", "RB"]),
+                            0x1: InstEVX("efdcfsi", "SP.FD", ["RT", "RB"]),
+                            0x2: InstEVX("efdcfuf", "SP.FD", ["RT", "RB"]),
+                            0x3: InstEVX("efdcfsf", "SP.FD", ["RT", "RB"]),
+                            0x4: InstEVX("efdctui", "SP.FD", ["RT", "RB"]),
+                            0x5: InstEVX("efdctsi", "SP.FD", ["RT", "RB"]),
+                            0x6: InstEVX("efdctuf", "SP.FD", ["RT", "RB"]),
+                            0x7: InstEVX("efdctsf", "SP.FD", ["RT", "RB"]),
+                            0x8: InstEVX("efdctuiz", "SP.FD", ["RT", "RB"]),
+                            0xA: InstEVX("efdctsiz", "SP.FD", ["RT", "RB"]),
+                            0xC: InstEVX("efdtstgt", "SP.FD", ["BF", "RA", "RB"]),
+                            0xD: InstEVX("efdtstlt", "SP.FD", ["BF", "RA", "RB"]),
+                            0xE: InstEVX("efdtsteq", "SP.FD", ["BF", "RA", "RB"]),
+                        })
+
+                    }),
+
+                    0x3: Level(24, 28, {
+                        0x0: Level(28, 32, {
+                            0x0: InstEVX("evlddx", "SP", ["RT", "RA", "RB"]),
+                            0x1: InstEVX("evldd", "SP", ["RT", "RA", "UI_16_21"]),
+                            0x2: InstEVX("evldwx", "SP", ["RT", "RA", "RB"]),
+                            0x3: InstEVX("evldw", "SP", ["RT", "RA", "UI_16_21"]),
+                            0x4: InstEVX("evldhx", "SP", ["RT", "RA", "RB"]),
+                            0x5: InstEVX("evldh", "SP", ["RT", "RA", "UI_16_21"]),
+                            0x8: InstEVX("evlhhesplatx", "SP", ["RT", "RA", "RB"]),
+                            0x9: InstEVX("evlhhesplat", "SP", ["RT", "RA", "UI_16_21"]),
+                            0xC: InstEVX("evlhhousplatx", "SP", ["RT", "RA", "RB"]),
+                            0xD: InstEVX("evlhhousplat", "SP", ["RT", "RA", "UI_16_21"]),
+                            0xE: InstEVX("evlhhossplatx", "SP", ["RT", "RA", "RB"]),
+                            0xF: InstEVX("evlhhossplat", "SP", ["RT", "RA", "UI_16_21"]),
+                        }),
+
+                        0x1: Level(28, 32, {
+                            0x0: InstEVX("evlwhex", "SP", ["RT", "RA", "RB"]),
+                            0x1: InstEVX("evlwhe", "SP", ["RT", "RA", "UI_16_21"]),
+                            0x4: InstEVX("evlwhoux", "SP", ["RT", "RA", "RB"]),
+                            0x5: InstEVX("evlwhou", "SP", ["RT", "RA", "UI_16_21"]),
+                            0x6: InstEVX("evlwhosx", "SP", ["RT", "RA", "RB"]),
+                            0x7: InstEVX("evlwhos", "SP", ["RT", "RA", "UI_16_21"]),
+                            0x8: InstEVX("evlwwsplatx", "SP", ["RT", "RA", "RB"]),
+                            0x9: InstEVX("evlwwsplat", "SP", ["RT", "RA", "UI_16_21"]),
+                            0xC: InstEVX("evlwhsplatx", "SP", ["RT", "RA", "RB"]),
+                            0xD: InstEVX("evlwhsplat", "SP", ["RT", "RA", "UI_16_21"]),
+                        }),
+
+                        0x2: Level(28, 32, {
+                            0x0: InstEVX("evstddx", "SP", ["RS", "RA", "RB"]),
+                            0x1: InstEVX("evstdd", "SP", ["RS", "RA", "UI_16_21"]),
+                            0x2: InstEVX("evstdwx", "SP", ["RS", "RA", "RB"]),
+                            0x3: InstEVX("evstdw", "SP", ["RS", "RA", "UI_16_21"]),
+                            0x4: InstEVX("evstdhx", "SP", ["RS", "RA", "RB"]),
+                            0x5: InstEVX("evstdh", "SP", ["RS", "RA", "UI_16_21"]),
+                        }),
+
+                        0x3: Level(28, 32, {
+                            0x0: InstEVX("evstwhex", "SP", ["RS", "RA", "RB"]),
+                            0x1: InstEVX("evstwhe", "SP", ["RS", "RA", "UI_16_21"]),
+                            0x4: InstEVX("evstwhox", "SP", ["RS", "RA", "RB"]),
+                            0x5: InstEVX("evstwho", "SP", ["RS", "RA", "UI_16_21"]),
+                            0x8: InstEVX("evstwwex", "SP", ["RS", "RA", "RB"]),
+                            0x9: InstEVX("evstwwe", "SP", ["RS", "RA", "UI_16_21"]),
+                            0xC: InstEVX("evstwwox", "SP", ["RS", "RA", "RB"]),
+                            0xD: InstEVX("evstwwo", "SP", ["RS", "RA", "UI_16_21"]),
+                        }),
+                    }),
+
+                    0x4: Level(24, 28, {
+                        0x0: Level(28, 32, {
+                            0x3: InstEVX("evmhessf", "SP", ["RT", "RA", "RB"]),
+                            0x7: InstEVX("evmhossf", "SP", ["RT", "RA", "RB"]),
+                            0x8: InstEVX("evmheumi", "SP", ["RT", "RA", "RB"]),
+                            0x9: InstEVX("evmhesmi", "SP", ["RT", "RA", "RB"]),
+                            0xB: InstEVX("evmhesmf", "SP", ["RT", "RA", "RB"]),
+                            0xC: InstEVX("evmhoumi", "SP", ["RT", "RA", "RB"]),
+                            0xD: InstEVX("evmhosmi", "SP", ["RT", "RA", "RB"]),
+                            0xF: InstEVX("evmhosmf", "SP", ["RT", "RA", "RB"]),
+                        }),
+
+                        0x2: Level(28, 32, {
+                            0x3: InstEVX("evmhessfa", "SP", ["RT", "RA", "RB"]),
+                            0x7: InstEVX("evmhossfa", "SP", ["RT", "RA", "RB"]),
+                            0x8: InstEVX("evmheumia", "SP", ["RT", "RA", "RB"]),
+                            0x9: InstEVX("evmhesmia", "SP", ["RT", "RA", "RB"]),
+                            0xB: InstEVX("evmhesmfa", "SP", ["RT", "RA", "RB"]),
+                            0xC: InstEVX("evmhoumia", "SP", ["RT", "RA", "RB"]),
+                            0xD: InstEVX("evmhosmia", "SP", ["RT", "RA", "RB"]),
+                            0xF: InstEVX("evmhosmfa", "SP", ["RT", "RA", "RB"]),
+                        }),
+
+                        0x4: Level(28, 32, {
+                            0x7: InstEVX("evmwhssf", "SP", ["RT", "RA", "RB"]),
+                            0x8: InstEVX("evmwlumi", "SP", ["RT", "RA", "RB"]),
+                            0xC: InstEVX("evmwhumi", "SP", ["RT", "RA", "RB"]),
+                            0xD: InstEVX("evmwhsmi", "SP", ["RT", "RA", "RB"]),
+                            0xF: InstEVX("evmwhsmf", "SP", ["RT", "RA", "RB"]),
+                        }),
+
+                        0x5: Level(28, 32, {
+                            0x3: InstEVX("evmwssf", "SP", ["RT", "RA", "RB"]),
+                            0x8: InstEVX("evmwumi", "SP", ["RT", "RA", "RB"]),
+                            0x9: InstEVX("evmwsmi", "SP", ["RT", "RA", "RB"]),
+                            0xB: InstEVX("evmwsmf", "SP", ["RT", "RA", "RB"]),
+                        }),
+
+                        0x6: Level(28, 32, {
+                            0x7: InstEVX("evmwhssfa", "SP", ["RT", "RA", "RB"]),
+                            0x8: InstEVX("evmwlumia", "SP", ["RT", "RA", "RB"]),
+                            0xC: InstEVX("evmwhumia", "SP", ["RT", "RA", "RB"]),
+                            0xD: InstEVX("evmwhsmia", "SP", ["RT", "RA", "RB"]),
+                            0xF: InstEVX("evmwhsmfa", "SP", ["RT", "RA", "RB"]),
+                        }),
+
+                        0x7: Level(28, 32, {
+                            0x3: InstEVX("evmwssfa", "SP", ["RT", "RA", "RB"]),
+                            0x8: InstEVX("evmwumia", "SP", ["RT", "RA", "RB"]),
+                            0x9: InstEVX("evmwsmia", "SP", ["RT", "RA", "RB"]),
+                            0xB: InstEVX("evmwsmfa", "SP", ["RT", "RA", "RB"]),
+                        }),
+
+                        0xC: Level(28, 32, {
+                            0x0: InstEVX("evaddusiaaw", "SP", ["RT", "RA"]),
+                            0x1: InstEVX("evaddssiaaw", "SP", ["RT", "RA"]),
+                            0x2: InstEVX("evsubfusiaaw", "SP", ["RT", "RA"]),
+                            0x3: InstEVX("evsubfssiaaw", "SP", ["RT", "RA"]),
+                            0x4: InstEVX("evmra", "SP", ["RT", "RA"]),
+                            0x6: InstEVX("evdivws", "SP", ["RT", "RA", "RB"]),
+                            0x7: InstEVX("evdivwu", "SP", ["RT", "RA", "RB"]),
+                            0x8: InstEVX("evaddumiaaw", "SP", ["RT", "RA"]),
+                            0x9: InstEVX("evaddsmiaaw", "SP", ["RT", "RA"]),
+                            0xA: InstEVX("evsubfumiaaw", "SP", ["RT", "RA"]),
+                            0xB: InstEVX("evsubfsmiaaw", "SP", ["RT", "RA"]),
+                        }),
+                    }),
+
+                    0x5: Level(24, 28, {
+                        0x0: Level(28, 32, {
+                            0x0: InstEVX("evmheusiaaw", "SP", ["RT", "RA", "RB"]),
+                            0x1: InstEVX("evmhessiaaw", "SP", ["RT", "RA", "RB"]),
+                            0x3: InstEVX("evmhessfaaw", "SP", ["RT", "RA", "RB"]),
+                            0x4: InstEVX("evmhousiaaw", "SP", ["RT", "RA", "RB"]),
+                            0x5: InstEVX("evmhossiaaw", "SP", ["RT", "RA", "RB"]),
+                            0x7: InstEVX("evmhossfaaw", "SP", ["RT", "RA", "RB"]),
+                            0x8: InstEVX("evmheumiaaw", "SP", ["RT", "RA", "RB"]),
+                            0x9: InstEVX("evmhesmiaaw", "SP", ["RT", "RA", "RB"]),
+                            0xB: InstEVX("evmhesmfaaw", "SP", ["RT", "RA", "RB"]),
+                            0xC: InstEVX("evmhoumiaaw", "SP", ["RT", "RA", "RB"]),
+                            0xD: InstEVX("evmhosmiaaw", "SP", ["RT", "RA", "RB"]),
+                            0xF: InstEVX("evmhosmfaaw", "SP", ["RT", "RA", "RB"]),
+                        }),
+
+                        0x2: Level(28, 32, {
+                            0x8: InstEVX("evmhegumiaa", "SP", ["RT", "RA", "RB"]),
+                            0x9: InstEVX("evmhegsmiaa", "SP", ["RT", "RA", "RB"]),
+                            0xB: InstEVX("evmhegsmfaa", "SP", ["RT", "RA", "RB"]),
+                            0xC: InstEVX("evmhogumiaa", "SP", ["RT", "RA", "RB"]),
+                            0xD: InstEVX("evmhogsmiaa", "SP", ["RT", "RA", "RB"]),
+                            0xF: InstEVX("evmhogsmfaa", "SP", ["RT", "RA", "RB"]),
+                        }),
+
+                        0x4: Level(28, 32, {
+                            0x0: InstEVX("evmwlusiaaw", "SP", ["RT", "RA", "RB"]),
+                            0x1: InstEVX("evmwlssiaaw", "SP", ["RT", "RA", "RB"]),
+                            # 0x4: InstEVX("evmwhusiaaw", "SP", []),    # No Instruction Info
+                            # 0x7: InstEVX("evmwhssfaaw", "SP", []),    # No Instruction Info
+                            0x8: InstEVX("evmwlumiaaw", "SP", ["RT", "RA", "RB"]),
+                            0x9: InstEVX("evmwlsmiaaw", "SP", ["RT", "RA", "RB"]),
+                            # 0xC: InstEVX("evmwhumiaaw", "SP", []),    # No Instruction Info
+                            # 0xD: InstEVX("evmwhsmiaaw", "SP", []),    # No Instruction Info
+                            # 0xF: InstEVX("evmwhsmfaaw", "SP", []),    # No Instruction Info
+                        }),
+
+                        0x5: Level(28, 32, {
+                            0x3: InstEVX("evmwssfaa", "SP", ["RT", "RA", "RB"]),
+                            0x8: InstEVX("evmwumiaa", "SP", ["RT", "RA", "RB"]),
+                            0x9: InstEVX("evmwsmiaa", "SP", ["RT", "RA", "RB"]),
+                            0xB: InstEVX("evmwsmfaa", "SP", ["RT", "RA", "RB"]),
+                        }),
+
+                        0x8: Level(28, 32, {
+                            0x0: InstEVX("evmheusianw", "SP", ["RT", "RA", "RB"]),
+                            0x1: InstEVX("evmhessianw", "SP", ["RT", "RA", "RB"]),
+                            0x3: InstEVX("evmhessfanw", "SP", ["RT", "RA", "RB"]),
+                            0x4: InstEVX("evmhousianw", "SP", ["RT", "RA", "RB"]),
+                            0x5: InstEVX("evmhossianw", "SP", ["RT", "RA", "RB"]),
+                            0x7: InstEVX("evmhossfanw", "SP", ["RT", "RA", "RB"]),
+                            0x8: InstEVX("evmheumianw", "SP", ["RT", "RA", "RB"]),
+                            0x9: InstEVX("evmhesmianw", "SP", ["RT", "RA", "RB"]),
+                            0xB: InstEVX("evmhesmfanw", "SP", ["RT", "RA", "RB"]),
+                            0xC: InstEVX("evmhoumianw", "SP", ["RT", "RA", "RB"]),
+                            0xD: InstEVX("evmhosmianw", "SP", ["RT", "RA", "RB"]),
+                            0xF: InstEVX("evmhosmfanw", "SP", ["RT", "RA", "RB"]),
+                        }),
+
+                        0xA: Level(28, 32, {
+                            0x8: InstEVX("evmhegumian", "SP", ["RT", "RA", "RB"]),
+                            0x9: InstEVX("evmhegsmian", "SP", ["RT", "RA", "RB"]),
+                            0xB: InstEVX("evmhegsmfan", "SP", ["RT", "RA", "RB"]),
+                            0xC: InstEVX("evmhogumian", "SP", ["RT", "RA", "RB"]),
+                            0xD: InstEVX("evmhogsmian", "SP", ["RT", "RA", "RB"]),
+                            0xF: InstEVX("evmhogsmfan", "SP", ["RT", "RA", "RB"]),
+                        }),
+
+                        0xC: Level(28, 32, {
+                            0x0: InstEVX("evmwlusianw", "SP", ["RT", "RA", "RB"]),
+                            0x1: InstEVX("evmwlssianw", "SP", ["RT", "RA", "RB"]),
+                            # 0x4: InstEVX("evmwhusianw", "SP", []),    # No Instruction Info
+                            # 0x5: InstEVX("evmwhssianw", "SP", []),    # No Instruction Info
+                            # 0x7: InstEVX("evmwhssfanw", "SP", []),    # No Instruction Info
+                            0x8: InstEVX("evmwlumianw", "SP", ["RT", "RA", "RB"]),
+                            0x9: InstEVX("evmwlsmianw", "SP", ["RT", "RA", "RB"]),
+                            # 0xC: InstEVX("evmwhumianw", "SP", []),    # No Instruction Info
+                            # 0xD: InstEVX("evmwhsmianw", "SP", []),    # No Instruction Info
+                            # 0xF: InstEVX("evmwhsmfanw", "SP", []),    # No Instruction Info
+                        }),
+
+                        0xD: Level(28, 32, {
+                            0x3: InstEVX("evmwssfan", "SP", ["RT", "RA", "RB"]),
+                            0x8: InstEVX("evmwumian", "SP", ["RT", "RA", "RB"]),
+                            0x9: InstEVX("evmwsmian", "SP", ["RT", "RA", "RB"]),
+                            0xB: InstEVX("evmwsmfan", "SP", ["RT", "RA", "RB"]),
+                        }),
+                    }),
+                }),
+            })
+        }),
+        
+        # Category B
+        PowerCategory.B: Level(0, 4, {
+            0x7: Level(0, 6, {
+                0b011111: Level(27, 31, {
+                    0x0: Level(21, 27, {
+                        0b000000: InstX("cmp", "B", ["BF", "L", "RA", "RB"]),
+                        0b000010: InstX("cmpl", "B", ["BF", "L", "RA", "RB"]),
+                        0b001001: Level(11, 12, {
+                            0: InstXFX("mtcrf", "B", ["RS", "FXM"]),
+                            1: InstXFX("mtocrf", "B", ["FXM", "RS"]),
+                        }),
+                        0b100000: InstX("mcrxr", "B", ["BF"]),
+                    }),
+
+                    0x3: Level(21, 27, {
+                        0b000001: Level(11, 12, {
+                            0: InstXFX("mfcr", "B", ["RT"]),
+                            1: InstXFX("mfocrf", "B", ["RT", "FXM"]),
+                        }),
+                        0b000101: InstX("mfmsr", "B", ["RT"]),
+                        0b010101: InstXFX("mfspr", "B", ["RT", "SPR"]),
+                        0b011101: InstXFX("mtspr", "B", ["SPR", "RS"]),
+                    }),
+
+                    0x4: Level(21, 27, {
+                        0b000000: InstX("tw", "B", ["TO", "RA", "RB"]),
+                        0b000001: InstX("lwarx", "B", ["RT", "RA", "RB"]),
+                    }),
+
+                    0x6: Level(21, 27, {
+                        0b000011: InstX("dcbst", "B", ["RA", "RB"]),
+                        0b000101: InstX("dcbf", "B", ["L", "RA", "RB"]),
+                        0b001001: InstX("stwcx.", "B", ["RS", "RA", "RB"]),
+                        0b001111: InstX("dcbtst", "B", ["TH", "RA", "RB"]),
+                        0b010001: InstX("dcbt", "B", ["TH", "RA", "RB"]),
+                        0b100001: InstX("lwbrx", "B", ["RT", "RA", "RB"]),
+                        0b100101: InstX("sync", "B", ["L"]),
+                        0b101001: InstX("stwbrx", "B", ["RS", "RA", "RB"]),
+                        0b110001: InstX("lhbrx", "B", ["RT", "RA", "RB"]),
+                        0b111001: InstX("sthbrx", "B", ["RS", "RA", "RB"]),
+                        0b111101: InstX("icbi", "B", ["RA", "RB"]),
+                        0b111111: InstX("dcbz", "B", ["RA", "RB"]),
+                    }),
+
+                    0x7: Level(21, 27, {
+                        0b000001: InstX("lwzx", "B", ["RT", "RA", "RB"]),
+                        0b000011: InstX("lwzux", "B", ["RT", "RA", "RB"]),
+                        0b000101: InstX("lbzx", "B", ["RT", "RA", "RB"]),
+                        0b000111: InstX("lbzux", "B", ["RT", "RA", "RB"]),
+                        0b001001: InstX("stwx", "B", ["RS", "RA", "RB"]),
+                        0b001011: InstX("stwux", "B", ["RS", "RA", "RB"]),
+                        0b001101: InstX("stbx", "B", ["RS", "RA", "RB"]),
+                        0b001111: InstX("stbux", "B", ["RS", "RA", "RB"]),
+                        0b010001: InstX("lhzx", "B", ["RT", "RA", "RB"]),
+                        0b010011: InstX("lhzux", "B", ["RT", "RA", "RB"]),
+                        0b010101: InstX("lhax", "B", ["RT", "RA", "RB"]),
+                        0b010111: InstX("lhaux", "B", ["RT", "RA", "RB"]),
+                        0b011001: InstX("sthx", "B", ["RS", "RA", "RB"]),
+                        0b011011: InstX("sthux", "B", ["RS", "RA", "RB"]),
+                    }),
+
+                    0x8: Level(21, 27, {
+                        0b000001: InstX("slw", "B", ["RA", "RS", "RB", "Rc"]),
+                        0b100001: InstX("srw", "B", ["RA", "RS", "RB", "Rc"]),
+                        0b110001: InstX("sraw", "B", ["RA", "RS", "RB", "Rc"]),
+                        0b110011: InstX("srawi", "B", ["RA", "RS", "SH", "Rc"]),
+
+                        # XO-form OE (inst[21:22]) and XO
+                        0b000000: InstXO("subfc", "B", ["RT", "RA", "RB", "OE", "Rc"]),
+                        0b100000: InstXO("subfco", "B", ["RT", "RA", "RB", "OE", "Rc"]),
+                        0b000010: InstXO("subf", "B", ["RT", "RA", "RB", "OE", "Rc"]),
+                        0b100010: InstXO("subfo", "B", ["RT", "RA", "RB", "OE", "Rc"]),
+                        0b000110: InstXO("neg", "B", ["RT", "RA", "OE", "Rc"]),
+                        0b100110: InstXO("nego", "B", ["RT", "RA", "OE", "Rc"]),
+                        0b001000: InstXO("subfe", "B", ["RT", "RA", "RB", "OE", "Rc"]),
+                        0b101000: InstXO("subfeo", "B", ["RT", "RA", "RB", "OE", "Rc"]),
+                        0b001100: InstXO("subfze", "B", ["RT", "RA", "OE", "Rc"]),
+                        0b101100: InstXO("subfzeo", "B", ["RT", "RA", "OE", "Rc"]),
+                        0b001110: InstXO("subfme", "B", ["RT", "RA", "OE", "Rc"]),
+                        0b101110: InstXO("subfmeo", "B", ["RT", "RA", "OE", "Rc"]),
+
+                    }),
+
+                    0xA: Level(21, 27, {
+                        0b000001: InstX("cntlzw", "B", ["RA", "RS", "Rc"]),
+                        0b000111: InstX("popcntb", "B", ["RA", "RS"]),
+                        0b111001: InstX("extsh", "B", ["RA", "RS", "Rc"]),
+                        0b111011: InstX("extsb", "B", ["RA", "RS", "Rc"]),
+
+                        # XO-Form
+                        0b000000: InstXO("addc", "B", ["RT", "RA", "RB", "OE", "Rc"]),
+                        0b100000: InstXO("addco", "B", ["RT", "RA", "RB", "OE", "Rc"]),
+                        0b001000: InstXO("adde", "B", ["RT", "RA", "RB", "OE", "Rc"]),
+                        0b101000: InstXO("addeo", "B", ["RT", "RA", "RB", "OE", "Rc"]),
+                        0b001100: InstXO("addze", "B", ["RT", "RA", "OE", "Rc"]),
+                        0b101100: InstXO("addzeo", "B", ["RT", "RA", "OE", "Rc"]),
+                        0b001110: InstXO("addme", "B", ["RT", "RA", "OE", "Rc"]),
+                        0b101110: InstXO("addmeo", "B", ["RT", "RA", "OE", "Rc"]),
+                        0b010000: InstXO("add", "B", ["RT", "RA", "RB", "OE", "Rc"]),
+                        0b110000: InstXO("addo", "B", ["RT", "RA", "RB", "OE", "Rc"]),
+                    }),
+
+                    0xB: Level(22, 27, {
+                        0b00000: InstXO("mulhwu", "B", ["RT", "RA", "RB", "Rc"]),
+                        0b00100: InstXO("mulhw", "B", ["RT", "RA", "RB", "Rc"]),
+                        0b01110: Level(21, 22, {
+                            0: InstXO("mullw", "B", ["RT", "RA", "RB", "OE", "Rc"]),
+                            1: InstXO("mullwo", "B", ["RT", "RA", "RB", "OE", "Rc"]),
+                        }),
+                        0b11100: Level(21, 22, {
+                            0: InstXO("divwu", "B", ["RT", "RA", "RB", "OE", "Rc"]),
+                            1: InstXO("divwuo", "B", ["RT", "RA", "RB", "OE", "Rc"]),
+                        }),
+                        0b11110: Level(21, 22, {
+                            0: InstXO("divw", "B", ["RT", "RA", "RB", "OE", "Rc"]),
+                            1: InstXO("divwo", "B", ["RT", "RA", "RB", "OE", "Rc"]),
+                        }),
+
+                    }),
+
+                    0xC: Level(21, 27, {
+                        0b000001: InstX("and", "B", ["RA", "RS", "RB", "Rc"]),
+                        0b000011: InstX("andc", "B", ["RA", "RS", "RB", "Rc"]),
+                        0b000111: InstX("nor", "B", ["RA", "RS", "RB", "Rc"]),
+                        0b010001: InstX("eqv", "B", ["RA", "RS", "RB", "Rc"]),
+                        0b010011: InstX("xor", "B", ["RA", "RS", "RB", "Rc"]),
+                        0b011001: InstX("orc", "B", ["RA", "RS", "RB", "Rc"]),
+                        0b011011: InstX("or", "B", ["RA", "RS", "RB", "Rc"]),
+                        0b011101: InstX("nand", "B", ["RA", "RS", "RB", "Rc"]),
+                    }),
+
+                    0xF: Level(26, 27, {
+                        0: InstA("isel", "B", ["RT", "RA", "RB", "BC"]),
+                    }),
+                }),
+            }),
+        }),
+
+        #PowerCategory.V: Level(0, 4, {}),
     }
 
     def __init__(self, categories: PowerCategory = None):

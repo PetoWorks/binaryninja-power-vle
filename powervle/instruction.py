@@ -106,7 +106,7 @@ class Instruction:
 
     @property
     def mnemonic(self) -> str:
-        ext, mnemonic = self.name.split("_")
+        ext, mnemonic = self.name.split("_") if self.name.find("_") != -1 else [None, self.name]
         if self.conditional_branch:
             mnemonic = mnemonic[:-1] + self.branch_condition
         if "LK" in self.operands:
@@ -357,6 +357,32 @@ def InstX(name: str, category: str, operands: list[str | bytes | int], **other) 
         "FRT" : (6, 11)
     }, operands, **other)
 
+# EVX-Form
+def InstEVX(name: str, category: str, operands: list[str | bytes | int], **other) -> type[Instruction]:
+    return Inst(name, category, 4, {
+        "OPCD": (0, 6),
+        "RS": (6, 11),
+        "RT": (6, 11),
+        "BF": (6, 9),
+        "RA": (11, 16),
+        "SI": (11, 16),
+        "UI_11_16": (11, 16),
+        "RB": (16, 21),
+        "UI_16_21": (16, 21),
+        "XO": (21, 32),
+    }, operands, **other)
+
+# EVS-Form
+def InstEVS(name: str, category: str, operands: list[str | bytes | int], **other) -> type[Instruction]:
+    return Inst(name, category, 4, {
+        "OPCD": (0, 6),
+        "RT": (6, 11),
+        "RA": (11, 16),
+        "RB": (16, 21),
+        "XO": (21, 29),
+        "BFA": (29, 32),
+    }, operands, **other)
+
 def InstXL(name: str, category: str, operands: list[str | bytes | int], **other) -> type[Instruction]:
     return Inst(name, category, 4, {
         "OPCD": (0, 6),
@@ -370,4 +396,44 @@ def InstXL(name: str, category: str, operands: list[str | bytes | int], **other)
         "LK" : (31, 32),
         "BF" : (6, 9),
         "BFA" : (11, 14)
+    }, operands, **other)
+
+def InstXO(name: str, category: str, operands: list[str | bytes | int], **other) -> type[Instruction]:
+    return Inst(name, category, 4, {
+        "OPCD": (0, 6),
+        "RT": (6, 11),
+        "RA": (11, 16),
+        "RB": (16, 21),
+        "OE": (21, 22),
+        "XO": (22, 31),
+        "Rc": (31, 32)
+    }, operands, **other)
+
+def InstXFX(name: str, category: str, operands: list[str | bytes | int], **other) -> type[Instruction]:
+    return Inst(name, category, 4, {
+        "OPCD": (0, 6),
+        "RT": (6, 11),
+        "DUI": (6, 11),
+        "RS": (6, 11),
+        "SPR": (11, 21),
+        "TBR": (11, 21),
+        "DCR": (11, 21),
+        "DUIS": (11, 21),
+        "FXM": (12, 20),
+        "XO": (21, 31)
+    }, operands, **other)
+
+def InstA(name: str, category: str, operands: list[str | bytes | int], **other) -> type[Instruction]:
+    return Inst(name, category, 4, {
+        "OPCD": (0, 6),
+        "FRT": (6, 11),
+        "RT": (6, 11),
+        "FRA": (11, 16),
+        "RA": (11, 16),
+        "FRB": (16, 21),
+        "RB": (16, 21),
+        "FRC": (21, 26),
+        "BC": (21, 26),
+        "XO": (26, 31),
+        "Rc": (31, 32)
     }, operands, **other)

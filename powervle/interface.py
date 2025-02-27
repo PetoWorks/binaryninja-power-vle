@@ -100,6 +100,10 @@ class PowerVLE(Architecture):
         'r29': RegisterInfo("r29", 4, 0),
         'r30': RegisterInfo("r30", 4, 0),
         'r31': RegisterInfo("r31", 4, 0),
+
+        # SP Category - Accumulator Register
+        'acc': RegisterInfo("acc", 4, 0),
+        'spefscr': RegisterInfo("spefscr", 4, 0)
     }
 
     stack_pointer = "r1"
@@ -212,7 +216,7 @@ class PowerVLE(Architecture):
         'rfmci' : IntrinsicInfo([], []),
     }
 
-    categories = PowerCategory.VLE
+    categories = [PowerCategory.VLE, ]
 
     def __init__(self):
         super().__init__()
