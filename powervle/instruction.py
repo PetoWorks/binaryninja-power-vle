@@ -120,7 +120,7 @@ class Instruction:
         if self.conditional_branch:
             if ((bo32 := self.get_field_value("BO32")) != None and 
                 (bi32 := self.get_field_value("BI32")) != None):
-                return self._bcmap[bo32 & 1][bi32 % 4 + ((bo32 & 2) << 1)]
+                return self._bcmap[bo32 & 1][bi32 % 4 + ((bo32 & 2) >> 1)]
             elif ((bo16 := self.get_field_value("BO16")) != None and
                   (bi16 := self.get_field_value("BI16")) != None):
                 return self._bcmap[bo16][bi16]
