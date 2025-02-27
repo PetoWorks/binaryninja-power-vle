@@ -107,6 +107,7 @@ class PowerVLE(Architecture):
     }
 
     stack_pointer = "r1"
+    link_reg = "lr"
 
     flags = [
         'cr0lt', 'cr0gt', 'cr0eq', 'cr0so',
@@ -384,4 +385,3 @@ class DefaultCallingConvention(CallingConvention):
     int_arg_regs = ['r3', 'r4', 'r5', 'r6', 'r7', 'r8', 'r9', 'r10']
     
     int_return_reg = 'r3'
-    high_int_return_reg = 'r4'

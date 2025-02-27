@@ -1,4 +1,4 @@
-from .powervle.interface import (PowerVLE, DefaultCallingConvention, PowerVLEBinaryView)
+from .powervle.interface import (PowerVLE, DefaultCallingConvention)
 from binaryninja.architecture import Architecture
 
 PowerVLE.register()
