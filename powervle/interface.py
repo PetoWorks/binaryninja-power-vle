@@ -105,9 +105,46 @@ class PowerVLE(Architecture):
         'r30': RegisterInfo("r30", 4, 0),
         'r31': RegisterInfo("r31", 4, 0),
 
-        # SP Category - Accumulator Register
+        # SP Category
         'acc': RegisterInfo("acc", 4, 0),
-        'spefscr': RegisterInfo("spefscr", 4, 0)
+        'spefscr': RegisterInfo("spefscr", 4, 0),   # Special Register
+        
+        # E.CD Category - Special Register
+        'dcdbtrh': RegisterInfo("dcdbtrh", 4, 0),
+        'dcdbtrl': RegisterInfo("dcdbtrl", 4, 0),
+        'icdbdr': RegisterInfo("icdbdr", 4, 0),
+        'icdbtrh': RegisterInfo("icdbtrh", 4, 0),
+        'icdbtrl': RegisterInfo("icdbtrl", 4, 0),
+
+        # E.PM Category
+        'pmgc0': RegisterInfo("pmgc0", 4, 0),
+
+        'pmlca0' : RegisterInfo("pmlca0", 4, 0),  'pmlca1' : RegisterInfo("pmlca1", 4, 0),
+        'pmlca2' : RegisterInfo("pmlca2", 4, 0),  'pmlca3' : RegisterInfo("pmlca3", 4, 0),
+        'pmlca4' : RegisterInfo("pmlca4", 4, 0),  'pmlca5' : RegisterInfo("pmlca5", 4, 0),
+        'pmlca6' : RegisterInfo("pmlca6", 4, 0),  'pmlca7' : RegisterInfo("pmlca7", 4, 0),
+        'pmlca8' : RegisterInfo("pmlca8", 4, 0),  'pmlca9' : RegisterInfo("pmlca9", 4, 0),
+        'pmlca10': RegisterInfo("pmlca10", 4, 0), 'pmlca11': RegisterInfo("pmlca11", 4, 0),
+        'pmlca12': RegisterInfo("pmlca12", 4, 0), 'pmlca13': RegisterInfo("pmlca13", 4, 0),
+        'pmlca14': RegisterInfo("pmlca14", 4, 0), 'pmlca15': RegisterInfo("pmlca15", 4, 0),
+
+        'pmlcb0' : RegisterInfo("pmlcb0", 4, 0),  'pmlcb1' : RegisterInfo("pmlcb1", 4, 0),
+        'pmlcb2' : RegisterInfo("pmlcb2", 4, 0),  'pmlcb3' : RegisterInfo("pmlcb3", 4, 0),
+        'pmlcb4' : RegisterInfo("pmlcb4", 4, 0),  'pmlcb5' : RegisterInfo("pmlcb5", 4, 0),
+        'pmlcb6' : RegisterInfo("pmlcb6", 4, 0),  'pmlcb7' : RegisterInfo("pmlcb7", 4, 0),
+        'pmlcb8' : RegisterInfo("pmlcb8", 4, 0),  'pmlcb9' : RegisterInfo("pmlcb9", 4, 0),
+        'pmlcb10': RegisterInfo("pmlcb10", 4, 0), 'pmlcb11': RegisterInfo("pmlcb11", 4, 0),
+        'pmlcb12': RegisterInfo("pmlcb12", 4, 0), 'pmlcb13': RegisterInfo("pmlcb13", 4, 0),
+        'pmlcb14': RegisterInfo("pmlcb14", 4, 0), 'pmlcb15': RegisterInfo("pmlcb15", 4, 0),
+
+        'pmc0' : RegisterInfo("pmc0", 4, 0),  'pmc1' : RegisterInfo("pmc1", 4, 0),
+        'pmc2' : RegisterInfo("pmc2", 4, 0),  'pmc3' : RegisterInfo("pmc3", 4, 0),
+        'pmc4' : RegisterInfo("pmc4", 4, 0),  'pmc5' : RegisterInfo("pmc5", 4, 0),
+        'pmc6' : RegisterInfo("pmc6", 4, 0),  'pmc7' : RegisterInfo("pmc7", 4, 0),
+        'pmc8' : RegisterInfo("pmc8", 4, 0),  'pmc9' : RegisterInfo("pmc9", 4, 0),
+        'pmc10': RegisterInfo("pmc10", 4, 0), 'pmc11': RegisterInfo("pmc11", 4, 0),
+        'pmc12': RegisterInfo("pmc12", 4, 0), 'pmc13': RegisterInfo("pmc13", 4, 0),
+        'pmc14': RegisterInfo("pmc14", 4, 0), 'pmc15': RegisterInfo("pmc15", 4, 0),
     }
 
     stack_pointer = "r1"

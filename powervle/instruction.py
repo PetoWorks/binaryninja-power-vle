@@ -77,6 +77,17 @@ class Instruction:
                 return sign_extend(value, 8)
             elif name in ("SI", "D"):
                 return sign_extend(value, 16)
+            elif name == "PMRN": # For E.PM Category Register
+                regid = value >> 5
+                regnum = value & 0b1111
+                if regid == 0b00000:
+                    return f"pmc{regnum}"
+                elif regid == 0b00100:
+                    return f"pmlca{regnum}"
+                elif regid == 0b01000:
+                    return f"pmlcb{regnum}"
+                else:
+                    return f"pmgc0"
             else:
                 return value
     
@@ -354,7 +365,8 @@ def InstX(name: str, category: str, operands: list[str | bytes | int], **other) 
         "TH" : (7, 11),
         "CT" : (7, 11),
         "TO" : (6, 11),
-        "FRT" : (6, 11)
+        "FRT" : (6, 11),
+        "MO" : (6, 11)  # For E Category - mbar instruction
     }, operands, **other)
 
 # EVX-Form
@@ -420,7 +432,8 @@ def InstXFX(name: str, category: str, operands: list[str | bytes | int], **other
         "DCR": (11, 21),
         "DUIS": (11, 21),
         "FXM": (12, 20),
-        "XO": (21, 31)
+        "XO": (21, 31),
+        "PMRN": (11, 21) # For E.PM Category - mfpmr, mtpmr
     }, operands, **other)
 
 def InstA(name: str, category: str, operands: list[str | bytes | int], **other) -> type[Instruction]:
