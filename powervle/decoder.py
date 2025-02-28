@@ -222,7 +222,7 @@ class Decoder:
             0b0110010: InstIM5("se_bseti", "VLE", ["RX", "UI5"]),
             0b0110011: InstIM5("se_btsti", "VLE", ["RX", "UI5"]),
             0b0110100: InstIM5("se_srwi", "VLE", ["RX", "UI5"]),
-            0b0110001: InstIM5("se_srawi", "VLE", ["RX", "UI5"]),
+            0b0110101: InstIM5("se_srawi", "VLE", ["RX", "UI5"]),
             0b0110110: InstIM5("se_slwi", "VLE", ["RX", "UI5"]),
         }),
 
