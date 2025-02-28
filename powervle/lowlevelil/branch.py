@@ -4,6 +4,7 @@ from ..instruction import Instruction
 
 def lift_branch_instructions(inst: Instruction, il: LowLevelILFunction) -> None:
     target_address = inst.get_operand_value("target_addr")
+    next_address = inst.addr + inst.length
     if not target_address:
         il.append(il.unimplemented())
         return
@@ -11,6 +12,7 @@ def lift_branch_instructions(inst: Instruction, il: LowLevelILFunction) -> None:
     if inst.get_operand_value("LK") == 0:
         il.append(il.jump(il.const_pointer(il.arch.address_size, target_address)))
     else:
+        il.append(il.set_reg(il.arch.address_size, "lr", il.const_pointer(il.arch.address_size, next_address)))
         il.append(il.call(il.const_pointer(il.arch.address_size, target_address)))
 
 
@@ -45,16 +47,26 @@ def lift_cond_branch_instructions(inst: Instruction, il: LowLevelILFunction) -> 
         flag = "gt"
     elif bc == "eq":
         flag = "eq"
-    else: # TODO: so, ns, dnz, dz
+    elif bc == "so":
+        flag = "so"
+    elif bc == "ns":
+        negate = True
+        flag = "so"
+    elif bc == "dz":
+        cond = il.compare_equal(4, il.reg(4, "ctr"), il.const(4, 0))
+    elif bc == "dnz":
+        cond = il.compare_not_equal(4, il.reg(4, "ctr"), il.const(4, 0))
+    else: 
         il.append(il.unimplemented())
         return
 
+    if bc in ["ge", "le", "ne", "lt", "gt", "eq", "so", "ns"]:
+        cond = il.flag(f"cr{crnum}{flag}")
+        if negate:
+            cond = il.not_expr(0, cond)
+
     if inst.get_operand_value("LK") == 1:
         il.append(il.set_reg(il.arch.address_size, "lr", il.const_pointer(il.arch.address_size, next_address)))
-    
-    cond = il.flag(f"cr{crnum}{flag}")
-    if negate:
-        cond = il.not_expr(0, cond)
     
     new_true_label = False
     true_label = il.get_label_for_address(il.arch, target_address)
@@ -79,9 +91,11 @@ def lift_cond_branch_instructions(inst: Instruction, il: LowLevelILFunction) -> 
 
 
 def lift_indirect_branch_instructions(inst: Instruction, il: LowLevelILFunction) -> None:
+    next_address = inst.addr + inst.length
     if inst.name == "se_blr":
         if inst.get_operand_value("LK"):
-            il.append(il.unimplemented()) # TODO
+            il.append(il.set_reg(il.arch.address_size, "lr", il.const_pointer(il.arch.address_size, next_address)))
+            il.append(il.ret(il.reg(il.arch.address_size, "lr")))
         else:
             il.append(il.ret(il.reg(il.arch.address_size, "lr")))
     elif inst.name == "se_bctr":

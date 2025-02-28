@@ -9,7 +9,7 @@ from .instruction import (
     InstM, InstOIM5,
     InstR, InstRR,
     InstSCI8, InstSD4,
-    InstX, InstXL
+    InstX, InstXL,
 )
 
 from .utils import get_bits_from_int
@@ -290,7 +290,7 @@ class Decoder:
 
     VLE_INST_EXTRA = {
         PowerCategory.SP: Level(0, 4, {}),
-        PowerCategory.V: Level(0, 4, {}),
+        PowerCategory.V: Level(0, 4, {})
     }
 
     def __init__(self, categories: PowerCategory = None):
