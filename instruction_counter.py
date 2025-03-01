@@ -22,7 +22,7 @@ if __name__ == "__main__":
     if len(data) % 4:
         data += b'\x00' * (4 - len(data) % 4)
     
-    decoder = Decoder(PowerCategory.SP)
+    decoder = Decoder(PowerCategory.V)
     
     counter = {"unknown": 0}
     

@@ -353,7 +353,7 @@ def InstVX(name: str, category: str, operands: list[str | bytes | int], **other)
         "VRB" : (16, 21),
         "XO" : (21, 31),
         "UIM" : (11, 16),
-        "SIM" : (11, 16), 
+        "SIM" : (11, 16)
     }, operands, **other)
 
 def InstVA(name: str, category: str, operands: list[str | bytes | int], **other) -> type[Instruction]:
@@ -364,5 +364,5 @@ def InstVA(name: str, category: str, operands: list[str | bytes | int], **other)
         "VRB" : (16, 21),
         "VRC" : (21, 26),
         "XO" : (26, 31),
-        "SHB" : (22, 26),        
+        "SHB" : (22, 26)     
     }, operands, **other) 

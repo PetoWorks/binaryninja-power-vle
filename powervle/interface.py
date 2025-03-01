@@ -127,6 +127,7 @@ class PowerVLE(Architecture):
         'v30': RegisterInfo("v30", 16, 0),
         'v31': RegisterInfo("v31", 16, 0),
         'vscr': RegisterInfo("vscr", 4, 0),
+        'vrsave': RegisterInfo("vrsave", 4, 0)
     }
 
     stack_pointer = "r1"
