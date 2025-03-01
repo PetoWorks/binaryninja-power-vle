@@ -664,6 +664,41 @@ class Decoder:
         
         # Category B
         PowerCategory.B: Level(0, 4, {
+            0x4: Level(4, 6, {
+                0b11: Level(27, 31, {
+                    0x0: Level(21, 27, {
+                        0b000000: InstXL("mcrf", "B", ["BF", "BFA"]),
+                    }),
+                    
+                    0x1: Level(21, 27, {
+                        0b000010: InstXL("crnor", "B", ["BT", "BA", "BB"]),
+                        0b001000: InstXL("crandc", "B", ["BT", "BA", "BB"]),
+                        0b001100: InstXL("crxor", "B", ["BT", "BA", "BB"]),
+                        0b001110: InstXL("crnand", "B", ["BT", "BA", "BB"]),
+                        0b010000: InstXL("crand", "B", ["BT", "BA", "BB"]),
+                        0b010010: InstXL("creqv", "B", ["BT", "BA", "BB"]),
+                        0b011010: InstXL("crorc", "B", ["BR", "BA", "BB"]),
+                        0b011100: InstXL("cror", "B", ["BT", "BA", "BB"]),
+                    }),
+
+                    0x6: Level(21, 27, {
+                        0b001001: InstXL("isync", "B", []),
+                    }),
+
+                    0x8: Level(21, 27, {
+                        0b000000: Level(31, 32, {
+                            0: InstXL("bclr", "B", ["BO", "BI", "BH", "LK"], conditional_branch=True),
+                            1: InstXL("bclrl", "B", ["BO", "BI", "BH", "LK"], conditional_branch=True),
+                        }),
+
+                        0b010000: Level(31, 32, {
+                            0: InstXL("bcctr", "B", ["BO", "BI", "BH", "LK"], conditional_branch=True),
+                            1: InstXL("bcctrl", "B", ["BO", "BI", "BH", "LK"], conditional_branch=True),
+                        }),
+                    }),
+                }),
+            }),
+
             0x7: Level(0, 6, {
                 0b011111: Level(27, 31, {
                     0x0: Level(21, 27, {
@@ -800,6 +835,166 @@ class Decoder:
             }),
         }),
 
+        # E Category
+        PowerCategory.E: Level(0, 4, {
+            0x7: Level(0, 6, {
+                0b011111: Level(27, 31, {
+                    0x2: Level(21, 27, {
+                        0b001001: InstX("mtmsr", "E", ["RS", "L"]),
+                        0b110001: InstX("tlbivax", "E", []),
+                        0b111001: InstX("tlbsx", "E", ["RA", "RB"]),
+                        0b111011: InstX("tlbre", "E", []),
+                        0b111101: InstX("tlbwe", "E", []),
+                    }),
+
+                    0x3: Level(21, 27, {
+                        0b001000: InstX("wrtee", "E", ["RS"]),
+                        0b001010: InstX("wrteei", "E", ["RS"]),
+                        0b010000: InstX("mfdcrx", "E", ["RT", "RA"]),
+                        0b010010: InstX("mfdcrux", "E", ["RT", "RA"]),
+                        0b010100: InstXFX("mfdcr", "E", ["RT", "DCR"]),
+                        0b011000: InstX("mtdcrx", "E", ["RA", "RS"]),
+                        0b011010: InstX("mtdcrux", "E", ["RS", "RA"]),
+                        0b011100: InstXFX("mtdcr", "E", ["DCR", "RS"]),
+                    }),
+
+                    0x6: Level(21, 27, {
+                        0b000001: InstX("icbt", "E", ["CT", "RA", "RB"]),
+                        0b011101: InstX("dcbi", "E", ["RA", "RB"]),
+                        0b100011: InstX("tlbsync", "E", []),
+                        0b101111: InstX("dcba", "E", ["RA", "RB"]),
+                        0b110101: InstX("mbar", "E", ["MO"]),
+
+                    }),
+                }),
+            }),
+        }),
+
+        # E.CD Category
+        PowerCategory.E_CD: Level(0, 4, {
+            0x7: Level(0, 6, {
+                0b011111: Level(27, 31, {
+                    0x6: Level(21, 27, {
+                        0b010100: InstX("dcread", "E_CD", ["RT", "RA", "RB"]), # dcread Alternative Encoding
+                        #0b011110: InstX("dcread", "E_CD", ["RT", "RA", "RB"]), # OPCode overlaps with icbtls
+                        0b111110: InstX("icread", "E_CD", ["RA", "RB"]),
+                    }),
+                }),
+            }),
+        }),
+
+        # E.CI Category
+        PowerCategory.E_CI: Level(0, 4, {
+            0x7: Level(0, 6, {
+                0b011111: Level(27, 31, {
+                    0x6: Level(21, 27, {
+                        0b011100: InstX("dci", "E_CI", ["CT"]),
+                        0b111100: InstX("ici", "E_CI", ["CT"]),
+                    }),
+                }),
+            }),
+        }),
+
+        # E.CL Category
+        PowerCategory.ECL: Level(0, 4, {
+            0x7: Level(0, 6, {
+                0b011111: Level(27, 31, {
+                    0x6: Level(21, 27, {
+                        0b001000: InstX("dcbtstls", "ECL", ["CT", "RA", "RB"]),
+                        0b001010: InstX("dcbtls", "ECL", ["CT", "RA", "RB"]),
+                        0b001110: InstX("icblc", "ECL", ["CT", "RA", "RB"]),
+                        0b011000: InstX("dcblc", "ECL", ["CT", "RA", "RB"]),
+                        0b011110: InstX("icbtls", "ECL", ["CT", "RA", "RB"]),
+                    }),
+                }),
+            }),
+        }),
+
+        # E.PD Category
+        PowerCategory.E_PD: Level(0, 4, {
+            0x7: Level(0, 6, {
+                0b011111: Level(27, 31, {
+                    0x7: Level(21, 27, {
+                        0b010000: InstX("lvepxl", "E_PD", ["VRT", "RA", "RB"]),
+                        0b010010: InstX("lvepx", "E_PD", ["VRT", "RA", "RB"]),
+                        0b110000: InstX("stvepxl", "E_PD", ["VRS", "RA", "RB"]),
+                        0b110010: InstX("stvepx", "E_PD", ["VRS", "RA", "RB"]),
+                    }),
+
+                    0xD: Level(21, 27, {
+                        0b000001: InstX("ldepx", "E_PD", ["RT", "RA", "RB"]),
+                        0b001001: InstX("stdepx", "E_PD", ["RS", "RA", "RB"]),
+                    }),
+
+                    0xE: Level(21, 27, {
+                        0b001000: Level(31, 32, {
+                            1: InstEVX("evlddepx", "E_PD", ["RT", "RA", "RB"]),
+                        }),
+                        0b001100: Level(31, 32, {
+                            1: InstEVX("evstddepx", "E_PD", ["RS", "RA", "RB"]),
+                        }),
+                    }),
+
+                    0xF: Level(26, 27, {
+                        1: Level(21, 27, {
+                            0b000001: InstX("lwepx", "E_PD", ["RT", "RA", "RB"]),
+                            0b000101: InstX("lbepx", "E_PD", ["RT", "RA", "RB"]),
+                            0b000111: InstX("dcbfep", "E_PD", ["RA", "RB"]),
+                            0b001001: InstX("stwepx", "E_PD", ["RS", "RA", "RB"]),
+                            0b001101: InstX("stbepx", "E_PD", ["RS", "RA", "RB"]),
+                            0b001111: InstX("dcbtstep", "E_PD", ["TH", "RA", "RB"]),
+                            0b010001: InstX("lhepx", "E_PD", ["RT", "RA", "RB"]),
+                            0b010011: InstX("dcbtep", "E_PD", ["TH", "RA", "RB"]),
+                            0b011001: InstX("sthepx", "E_PD", ["RS", "RA", "RB"]),
+                            0b100101: InstX("lfdepx", "E_PD", ["FRT", "RA", "RB"]),
+                            0b101101: InstX("stfdepx", "E_PD", ["FRS", "RA", "RB"]),
+                            0b111101: InstX("icbiep", "E_PD", ["RA", "RB"]),
+                            0b111111: InstX("dcbzep", "E_PD", ["RA", "RB"]),
+                        }),
+                    }),
+                }),
+            }),
+        }),
+
+        # E.PC Category
+        PowerCategory.E_PC: Level(0, 4, {
+            0x7: Level(0, 6, {
+                0b011111: Level(27, 31, {
+                    0xE: Level(21, 27, {
+                        0b001100: Level(31, 32, {
+                            0: InstX("msgsnd", "E_PC", ["RB"]),
+                        }),
+                        0b001110: InstX("msgclr", "E_PC", ["RB"]),
+                    }),
+                }),
+            }),
+        }),
+
+        # E.PM Category
+        PowerCategory.E_PM: Level(0, 4, {
+            0x7: Level(0, 6, {
+                0b011111: Level(27, 31, {
+                    0xE: Level(21, 27, {
+                        0b010100: InstXFX("mfpmr", "E_PM", ["RT", "PMRN"]),
+                        0b011100: InstXFX("mtpmr", "E_PM", ["PMRN", "RS"]),
+                    }),
+                }),
+            }),
+        }),
+
+        # MA Category
+        PowerCategory.MA: Level(0, 4, {
+            0x7: Level(0, 6, {
+                0b011111: Level(27, 31, {
+                    0x5: Level(21, 27, {
+                        0b100001: InstX("lswx", "MA", ["RT", "RA", "RB"]),
+                        0b100101: InstX("lswi", "MA", ["RT", "RA", "NB"]),
+                        0b101001: InstX("stswx", "MA", ["RS", "RA", "RB"]),
+                        0b101101: InstX("stswi", "MA", ["RS", "RA", "NB"]),
+                    }),
+                }),
+            }),
+        }),
         #PowerCategory.V: Level(0, 4, {}),
     }
 
