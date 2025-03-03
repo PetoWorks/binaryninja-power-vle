@@ -117,7 +117,7 @@ class Instruction:
 
     @property
     def mnemonic(self) -> str:
-        ext, mnemonic = self.name.split("_") if self.name.find("_") != -1 else [None, self.name]
+        mnemonic = self.name
         if self.conditional_branch:
             mnemonic = mnemonic[:-1] + self.branch_condition
         if "LK" in self.operands:
