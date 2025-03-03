@@ -996,6 +996,17 @@ class Decoder:
             }),
         }),
         #PowerCategory.V: Level(0, 4, {}),
+
+        PowerCategory.WT: Level(0, 4, {
+            0x7: Level(0, 6, {
+                0b011111: Level(27, 31, {
+                    0xE: Level(21, 27, {
+                        0b000011: InstX("wait", "WT", []),
+                    })
+                }),
+            }),
+        }),
+
     }
 
     def __init__(self, categories: PowerCategory = None):
