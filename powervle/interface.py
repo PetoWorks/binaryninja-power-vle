@@ -330,7 +330,7 @@ class PowerVLE(Architecture):
         skipped = 0
         for index, name in enumerate(instruction.operands):
 
-            if name in ("Rc", "LK"):
+            if name in ("Rc", "LK", "OE"):
                 skipped += 1
                 continue
 
