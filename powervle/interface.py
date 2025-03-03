@@ -278,7 +278,8 @@ class PowerVLE(Architecture):
 
         instruction = self.decode(data, addr)
         if not instruction:
-            info.length = 4
+            #info.length = 4
+            info.length = 2
             return info
 
         info.length = instruction.length
@@ -323,7 +324,7 @@ class PowerVLE(Architecture):
 
         instruction = self.decode(data, addr)
         if not instruction:
-            return [InstructionTextToken(InstructionTextTokenType.InstructionToken, "illegal")], 4
+            return [InstructionTextToken(InstructionTextTokenType.InstructionToken, "undef")], 2
 
         tokens = []
 
