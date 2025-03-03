@@ -194,19 +194,21 @@ class Decoder:
             0b001110: InstD("e_lha", "VLE", ["RT", "RA", "D"]),
         }),
 
-        0x4: Level(4, 6, { # secondary opcode level (inst[4:6])
-            0b00: Level(4, 8, { # extend opcode level (inst[6:8])
-                0x0: InstRR("se_srw", "VLE", ["RX", "RY"]),
-                0x1: InstRR("se_sraw", "VLE", ["RX", "RY"]),
-                0x2: InstRR("se_slw", "VLE", ["RX", "RY"]),
+        0x4: Level(4, 5, { # secondary opcode level (inst[4:6])
+            0: Level(5, 6, {
+                0b0: Level(4, 8, { # extend opcode level (inst[6:8])
+                    0x0: InstRR("se_srw", "VLE", ["RX", "RY"]),
+                    0x1: InstRR("se_sraw", "VLE", ["RX", "RY"]),
+                    0x2: InstRR("se_slw", "VLE", ["RX", "RY"]),
+                }),
+                0b1: Level(4, 8, { # ... continued
+                    0x4: InstRR("se_or", "VLE", ["RX", "RY"]),
+                    0x5: InstRR("se_andc", "VLE", ["RX", "RY"]),
+                    0x6: InstRR("se_and", "VLE", ["RX", "RY", "Rc"]),
+                    0x7: InstRR("se_and", "VLE", ["RX", "RY", "Rc"]),
+                }),
             }),
-            0b01: Level(4, 8, { # ... continued
-                0x4: InstRR("se_or", "VLE", ["RX", "RY"]),
-                0x5: InstRR("se_andc", "VLE", ["RX", "RY"]),
-                0x6: InstRR("se_and", "VLE", ["RX", "RY", "Rc"]),
-                0x7: InstRR("se_and", "VLE", ["RX", "RY", "Rc"]),
-            }),
-            0b10: InstIM7("se_li", "VLE", ["RX", "UI7"]),
+            1: InstIM7("se_li", "VLE", ["RX", "UI7"]),
         }),
 
         0x5: Level(0, 6, { # opcode bits level (inst[0:6])
@@ -664,40 +666,7 @@ class Decoder:
         
         # Category B
         PowerCategory.B: Level(0, 4, {
-            0x4: Level(4, 6, {
-                0b11: Level(27, 31, {
-                    0x0: Level(21, 27, {
-                        0b000000: InstXL("mcrf", "B", ["BF", "BFA"]),
-                    }),
-                    
-                    0x1: Level(21, 27, {
-                        0b000010: InstXL("crnor", "B", ["BT", "BA", "BB"]),
-                        0b001000: InstXL("crandc", "B", ["BT", "BA", "BB"]),
-                        0b001100: InstXL("crxor", "B", ["BT", "BA", "BB"]),
-                        0b001110: InstXL("crnand", "B", ["BT", "BA", "BB"]),
-                        0b010000: InstXL("crand", "B", ["BT", "BA", "BB"]),
-                        0b010010: InstXL("creqv", "B", ["BT", "BA", "BB"]),
-                        0b011010: InstXL("crorc", "B", ["BR", "BA", "BB"]),
-                        0b011100: InstXL("cror", "B", ["BT", "BA", "BB"]),
-                    }),
 
-                    0x6: Level(21, 27, {
-                        0b001001: InstXL("isync", "B", []),
-                    }),
-
-                    0x8: Level(21, 27, {
-                        0b000000: Level(31, 32, {
-                            0: InstXL("bclr", "B", ["BO", "BI", "BH", "LK"], conditional_branch=True),
-                            1: InstXL("bclrl", "B", ["BO", "BI", "BH", "LK"], conditional_branch=True),
-                        }),
-
-                        0b010000: Level(31, 32, {
-                            0: InstXL("bcctr", "B", ["BO", "BI", "BH", "LK"], conditional_branch=True),
-                            1: InstXL("bcctrl", "B", ["BO", "BI", "BH", "LK"], conditional_branch=True),
-                        }),
-                    }),
-                }),
-            }),
 
             0x7: Level(0, 6, {
                 0b011111: Level(27, 31, {
