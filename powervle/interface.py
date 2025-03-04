@@ -1,11 +1,16 @@
 from typing import Tuple, List
 
+from binaryninja import Intrinsic, IntrinsicInfo, Type
 from binaryninja.log import log_warn, log_error, log_debug
 
 from binaryninja.architecture import (
     FlagType, FlagWriteTypeName,
     Architecture, Endianness, RegisterInfo,
     InstructionInfo, InstructionTextToken
+)
+
+from binaryninja.callingconvention import (
+    CallingConvention
 )
 
 from binaryninja.lowlevelil import (
@@ -19,6 +24,7 @@ from binaryninja.enums import (
 )
 
 from .decoder import Decoder, PowerCategory
+from .lowlevelil import InstLiftTable
 from .utils import *
 
 
@@ -61,6 +67,11 @@ class PowerVLE(Architecture):
     regs = {
         'lr': RegisterInfo("lr", 4, 0),
         'ctr': RegisterInfo("ctr", 4, 0),
+        'srr': RegisterInfo("srr", 4, 0),
+        'srr0': RegisterInfo("srr0", 4, 0),
+        'srr1': RegisterInfo("srr1", 4, 0),
+        'msr': RegisterInfo("msr", 4, 0),
+        'esr': RegisterInfo("esr", 4, 0),
         'r0': RegisterInfo("r0", 4, 0),
         'r1': RegisterInfo("r1", 4, 0),
         'r2': RegisterInfo("r2", 4, 0),
@@ -93,6 +104,7 @@ class PowerVLE(Architecture):
         'r29': RegisterInfo("r29", 4, 0),
         'r30': RegisterInfo("r30", 4, 0),
         'r31': RegisterInfo("r31", 4, 0),
+
         # Vector Registers
         'v0': RegisterInfo("v0", 16, 0),
         'v1': RegisterInfo("v1", 16, 0),
@@ -127,10 +139,52 @@ class PowerVLE(Architecture):
         'v30': RegisterInfo("v30", 16, 0),
         'v31': RegisterInfo("v31", 16, 0),
         'vscr': RegisterInfo("vscr", 4, 0),
-        'vrsave': RegisterInfo("vrsave", 4, 0)
+        'vrsave': RegisterInfo("vrsave", 4, 0),
+
+        # SP Category
+        'acc': RegisterInfo("acc", 4, 0),
+        'spefscr': RegisterInfo("spefscr", 4, 0),   # Special Register
+        
+        # E.CD Category - Special Register
+        'dcdbtrh': RegisterInfo("dcdbtrh", 4, 0),
+        'dcdbtrl': RegisterInfo("dcdbtrl", 4, 0),
+        'icdbdr': RegisterInfo("icdbdr", 4, 0),
+        'icdbtrh': RegisterInfo("icdbtrh", 4, 0),
+        'icdbtrl': RegisterInfo("icdbtrl", 4, 0),
+
+        # E.PM Category
+        'pmgc0': RegisterInfo("pmgc0", 4, 0),
+
+        'pmlca0' : RegisterInfo("pmlca0", 4, 0),  'pmlca1' : RegisterInfo("pmlca1", 4, 0),
+        'pmlca2' : RegisterInfo("pmlca2", 4, 0),  'pmlca3' : RegisterInfo("pmlca3", 4, 0),
+        'pmlca4' : RegisterInfo("pmlca4", 4, 0),  'pmlca5' : RegisterInfo("pmlca5", 4, 0),
+        'pmlca6' : RegisterInfo("pmlca6", 4, 0),  'pmlca7' : RegisterInfo("pmlca7", 4, 0),
+        'pmlca8' : RegisterInfo("pmlca8", 4, 0),  'pmlca9' : RegisterInfo("pmlca9", 4, 0),
+        'pmlca10': RegisterInfo("pmlca10", 4, 0), 'pmlca11': RegisterInfo("pmlca11", 4, 0),
+        'pmlca12': RegisterInfo("pmlca12", 4, 0), 'pmlca13': RegisterInfo("pmlca13", 4, 0),
+        'pmlca14': RegisterInfo("pmlca14", 4, 0), 'pmlca15': RegisterInfo("pmlca15", 4, 0),
+
+        'pmlcb0' : RegisterInfo("pmlcb0", 4, 0),  'pmlcb1' : RegisterInfo("pmlcb1", 4, 0),
+        'pmlcb2' : RegisterInfo("pmlcb2", 4, 0),  'pmlcb3' : RegisterInfo("pmlcb3", 4, 0),
+        'pmlcb4' : RegisterInfo("pmlcb4", 4, 0),  'pmlcb5' : RegisterInfo("pmlcb5", 4, 0),
+        'pmlcb6' : RegisterInfo("pmlcb6", 4, 0),  'pmlcb7' : RegisterInfo("pmlcb7", 4, 0),
+        'pmlcb8' : RegisterInfo("pmlcb8", 4, 0),  'pmlcb9' : RegisterInfo("pmlcb9", 4, 0),
+        'pmlcb10': RegisterInfo("pmlcb10", 4, 0), 'pmlcb11': RegisterInfo("pmlcb11", 4, 0),
+        'pmlcb12': RegisterInfo("pmlcb12", 4, 0), 'pmlcb13': RegisterInfo("pmlcb13", 4, 0),
+        'pmlcb14': RegisterInfo("pmlcb14", 4, 0), 'pmlcb15': RegisterInfo("pmlcb15", 4, 0),
+
+        'pmc0' : RegisterInfo("pmc0", 4, 0),  'pmc1' : RegisterInfo("pmc1", 4, 0),
+        'pmc2' : RegisterInfo("pmc2", 4, 0),  'pmc3' : RegisterInfo("pmc3", 4, 0),
+        'pmc4' : RegisterInfo("pmc4", 4, 0),  'pmc5' : RegisterInfo("pmc5", 4, 0),
+        'pmc6' : RegisterInfo("pmc6", 4, 0),  'pmc7' : RegisterInfo("pmc7", 4, 0),
+        'pmc8' : RegisterInfo("pmc8", 4, 0),  'pmc9' : RegisterInfo("pmc9", 4, 0),
+        'pmc10': RegisterInfo("pmc10", 4, 0), 'pmc11': RegisterInfo("pmc11", 4, 0),
+        'pmc12': RegisterInfo("pmc12", 4, 0), 'pmc13': RegisterInfo("pmc13", 4, 0),
+        'pmc14': RegisterInfo("pmc14", 4, 0), 'pmc15': RegisterInfo("pmc15", 4, 0),
     }
 
     stack_pointer = "r1"
+    link_reg = "lr"
 
     flags = [
         'cr0lt', 'cr0gt', 'cr0eq', 'cr0so',
@@ -232,7 +286,18 @@ class PowerVLE(Architecture):
         ]
     }
 
-    categories = [PowerCategory.VLE, PowerCategory.V]
+    intrinsics = {
+        'isync' : IntrinsicInfo([], []),
+        'rfi'   : IntrinsicInfo([], []),
+        'rfci'  : IntrinsicInfo([], []),
+        'rfdi'  : IntrinsicInfo([], []),
+        'rfmci' : IntrinsicInfo([], []),
+    }
+
+    categories = [PowerCategory.VLE, PowerCategory.B, PowerCategory.SP,
+                  PowerCategory.E, PowerCategory.E_CD, PowerCategory.E_CI,
+                  PowerCategory.ECL, PowerCategory.E_PD, PowerCategory.E_PC,
+                  PowerCategory.E_PM, PowerCategory.MA, PowerCategory.WT, PowerCategory.V]
 
     def __init__(self):
         super().__init__()
@@ -249,7 +314,8 @@ class PowerVLE(Architecture):
 
         instruction = self.decode(data, addr)
         if not instruction:
-            info.length = 4
+            #info.length = 4
+            info.length = 2
             return info
 
         info.length = instruction.length
@@ -294,7 +360,7 @@ class PowerVLE(Architecture):
 
         instruction = self.decode(data, addr)
         if not instruction:
-            return [InstructionTextToken(InstructionTextTokenType.TextToken, "#UNAVAILABLE")], 4
+            return [InstructionTextToken(InstructionTextTokenType.InstructionToken, "undef")], 2
 
         tokens = []
 
@@ -304,7 +370,7 @@ class PowerVLE(Architecture):
         skipped = 0
         for index, name in enumerate(instruction.operands):
 
-            if name in ("Rc", "LK"):
+            if name in ("Rc", "LK", "OE"):
                 skipped += 1
                 continue
 
@@ -332,9 +398,14 @@ class PowerVLE(Architecture):
 
         instruction = self.decode(data, addr)
         if not instruction:
+            il.append(il.unimplemented())
             return 4
 
-        il.unimplemented()
+        if instruction.name in InstLiftTable and InstLiftTable[instruction.name]:
+            InstLiftTable[instruction.name](instruction, il)
+        else:
+            il.append(il.unimplemented())
+
         return instruction.length
 
     def get_flag_write_low_level_il(
@@ -381,3 +452,17 @@ class PowerVLE(Architecture):
                 return fn(size, left, write)
 
         return super().get_flag_write_low_level_il(op, size, write_type, flag, operands, il)
+
+class DefaultCallingConvention(CallingConvention):
+    name = 'default'
+    # dedicated: r1, r2, r13
+
+    # Nonvolatile registers
+    callee_saved_regs = ['r14', 'r15', 'r16', 'r17', 'r18', 'r19', 'r20', 'r21', 'r22',
+                         'r23', 'r24', 'r25', 'r26', 'r27', 'r28', 'r29', 'r30', 'r31']
+    # Volatile registers
+    caller_saved_regs = ['r0', 'r3', 'r4', 'r5', 'r6', 'r7', 'r8', 'r9', 'r10', 'r11', 'r12', 'lr', 'ctr']
+ 
+    int_arg_regs = ['r3', 'r4', 'r5', 'r6', 'r7', 'r8', 'r9', 'r10']
+    
+    int_return_reg = 'r3'

@@ -46,10 +46,16 @@ class Instruction:
                 return f"r{regnum}"
             elif name in ("ARX", "ARY"):
                 return f"r{8 + value}"
+            elif name == "BT": # TODO: CR or FPSCR
+                return f"cr{value >> 2}" # in "VLE"
+            elif name in ("BF", "BFA"): # TODO: CR or FPSCR
+                return f"cr{value}" # in "VLE"
+            elif name in ("BA", "BB"):
+                return f"cr{value >> 2}"
             elif name == "BF32":
                 return f"cr{value}"
             elif name == "BI32":
-                return f"cr{value >> 3}"
+                return f"cr{value >> 2}"
             elif name == "BI16":
                 return f"cr0"
             elif name == "SD4":
@@ -71,6 +77,17 @@ class Instruction:
                 return sign_extend(value, 8)
             elif name in ("SI", "D"):
                 return sign_extend(value, 16)
+            elif name == "PMRN": # For E.PM Category Register
+                regid = value >> 5
+                regnum = value & 0b1111
+                if regid == 0b00000:
+                    return f"pmc{regnum}"
+                elif regid == 0b00100:
+                    return f"pmlca{regnum}"
+                elif regid == 0b01000:
+                    return f"pmlcb{regnum}"
+                else:
+                    return f"pmgc0"
             else:
                 return value
     
@@ -100,13 +117,13 @@ class Instruction:
 
     @property
     def mnemonic(self) -> str:
-        ext, mnemonic = self.name.split("_")
+        mnemonic = self.name
         if self.conditional_branch:
-            mnemonic = mnemonic[:-1] + self.branch_condition
+            mnemonic = mnemonic + self.branch_condition
         if "LK" in self.operands:
-            mnemonic += "l" if self.get_operand_value("LK") else ""
+            mnemonic += "l" if self.get_operand_value("LK") == 1 else ""
         if "Rc" in self.operands:
-            mnemonic += "." if self.get_operand_value("Rc") else ""
+            mnemonic += "." if self.get_operand_value("Rc") == 1 else ""
         return mnemonic
 
     @property
@@ -114,10 +131,18 @@ class Instruction:
         if self.conditional_branch:
             if ((bo32 := self.get_field_value("BO32")) != None and 
                 (bi32 := self.get_field_value("BI32")) != None):
-                return self._bcmap[bo32 & 1][bi32 % 4 + ((bo32 & 2) << 1)]
+                return self._bcmap[bo32 & 1][bi32 % 4 + ((bo32 & 2) >> 1)]
             elif ((bo16 := self.get_field_value("BO16")) != None and
                   (bi16 := self.get_field_value("BI16")) != None):
                 return self._bcmap[bo16][bi16]
+
+    @property
+    def branch_condition_index(self) -> int | None:
+        if self.conditional_branch:
+            ret = self.get_field_value("BI32")
+            if ret == None:
+                ret = self.get_field_value("BI16")
+            return ret >> 2
 
 
 def Inst(
@@ -327,8 +352,8 @@ def InstX(name: str, category: str, operands: list[str | bytes | int], **other) 
         "NB" : (16, 21),
         "SR" : (12, 16),  
         "RS" : (6, 11),
-        "VRS": (6, 11),
-        "VRT": (6, 11),
+        "VRS": (6, 11), 
+        "VRT": (6, 11), 
         "Rc" : (31, 32),
         "SH" : (16, 21),
         "L" : (15, 16),
@@ -342,7 +367,8 @@ def InstX(name: str, category: str, operands: list[str | bytes | int], **other) 
         "TH" : (7, 11),
         "CT" : (7, 11),
         "TO" : (6, 11),
-        "FRT" : (6, 11)
+        "FRT" : (6, 11),
+        "MO" : (6, 11) # For E Category - mbar instruction
     }, operands, **other)
 
 def InstVX(name: str, category: str, operands: list[str | bytes | int], **other) -> type[Instruction]:
@@ -364,5 +390,87 @@ def InstVA(name: str, category: str, operands: list[str | bytes | int], **other)
         "VRB" : (16, 21),
         "VRC" : (21, 26),
         "XO" : (26, 31),
-        "SHB" : (22, 26)     
-    }, operands, **other) 
+        "SHB" : (22, 26)
+    }, operands, **other)
+
+# EVX-Form
+def InstEVX(name: str, category: str, operands: list[str | bytes | int], **other) -> type[Instruction]:
+    return Inst(name, category, 4, {
+        "OPCD": (0, 6),
+        "RS": (6, 11),
+        "RT": (6, 11),
+        "BF": (6, 9),
+        "RA": (11, 16),
+        "SI": (11, 16),
+        "UI_11_16": (11, 16),
+        "RB": (16, 21),
+        "UI_16_21": (16, 21),
+        "XO": (21, 32),
+    }, operands, **other)
+
+# EVS-Form
+def InstEVS(name: str, category: str, operands: list[str | bytes | int], **other) -> type[Instruction]:
+    return Inst(name, category, 4, {
+        "OPCD": (0, 6),
+        "RT": (6, 11),
+        "RA": (11, 16),
+        "RB": (16, 21),
+        "XO": (21, 29),
+        "BFA": (29, 32),
+    }, operands, **other)
+
+def InstXL(name: str, category: str, operands: list[str | bytes | int], **other) -> type[Instruction]:
+    return Inst(name, category, 4, {
+        "OPCD": (0, 6),
+        "BT" : (6, 11),
+        "BA" : (11, 16),
+        "BB" : (16, 21),
+        "XO" : (21, 31),
+        "BO" : (6, 11),
+        "BI" : (11, 16),
+        "BH" : (19, 21),
+        "LK" : (31, 32),
+        "BF" : (6, 9),
+        "BFA" : (11, 14)
+    }, operands, **other)
+
+def InstXO(name: str, category: str, operands: list[str | bytes | int], **other) -> type[Instruction]:
+    return Inst(name, category, 4, {
+        "OPCD": (0, 6),
+        "RT": (6, 11),
+        "RA": (11, 16),
+        "RB": (16, 21),
+        "OE": (21, 22),
+        "XO": (22, 31),
+        "Rc": (31, 32)
+    }, operands, **other)
+
+def InstXFX(name: str, category: str, operands: list[str | bytes | int], **other) -> type[Instruction]:
+    return Inst(name, category, 4, {
+        "OPCD": (0, 6),
+        "RT": (6, 11),
+        "DUI": (6, 11),
+        "RS": (6, 11),
+        "SPR": (11, 21),
+        "TBR": (11, 21),
+        "DCR": (11, 21),
+        "DUIS": (11, 21),
+        "FXM": (12, 20),
+        "XO": (21, 31),
+        "PMRN": (11, 21) # For E.PM Category - mfpmr, mtpmr
+    }, operands, **other)
+
+def InstA(name: str, category: str, operands: list[str | bytes | int], **other) -> type[Instruction]:
+    return Inst(name, category, 4, {
+        "OPCD": (0, 6),
+        "FRT": (6, 11),
+        "RT": (6, 11),
+        "FRA": (11, 16),
+        "RA": (11, 16),
+        "FRB": (16, 21),
+        "RB": (16, 21),
+        "FRC": (21, 26),
+        "BC": (21, 26),
+        "XO": (26, 31),
+        "Rc": (31, 32)
+    }, operands, **other)
