@@ -352,6 +352,8 @@ def InstX(name: str, category: str, operands: list[str | bytes | int], **other) 
         "NB" : (16, 21),
         "SR" : (12, 16),  
         "RS" : (6, 11),
+        "VRS": (6, 11), 
+        "VRT": (6, 11), 
         "Rc" : (31, 32),
         "SH" : (16, 21),
         "L" : (15, 16),
@@ -366,7 +368,29 @@ def InstX(name: str, category: str, operands: list[str | bytes | int], **other) 
         "CT" : (7, 11),
         "TO" : (6, 11),
         "FRT" : (6, 11),
-        "MO" : (6, 11)  # For E Category - mbar instruction
+        "MO" : (6, 11) # For E Category - mbar instruction
+    }, operands, **other)
+
+def InstVX(name: str, category: str, operands: list[str | bytes | int], **other) -> type[Instruction]:
+    return Inst(name, category, 4, {
+        "OPCD": (0, 6),
+        "VRT" : (6, 11),
+        "VRA" : (11, 16),
+        "VRB" : (16, 21),
+        "XO" : (21, 31),
+        "UIM" : (11, 16),
+        "SIM" : (11, 16)
+    }, operands, **other)
+
+def InstVA(name: str, category: str, operands: list[str | bytes | int], **other) -> type[Instruction]:
+    return Inst(name, category, 4, {
+        "OPCD": (0, 6),
+        "VRT" : (6, 11),
+        "VRA" : (11, 16),
+        "VRB" : (16, 21),
+        "VRC" : (21, 26),
+        "XO" : (26, 31),
+        "SHB" : (22, 26)
     }, operands, **other)
 
 # EVX-Form
