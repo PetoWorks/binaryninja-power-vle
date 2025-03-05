@@ -161,6 +161,23 @@ class Decoder:
                     0x8: InstD8("e_lmw", "VLE", ["RT", "RA", "D8"]),
                     0x9: InstD8("e_stmw", "VLE", ["RS", "RA", "D8"]),
                 }),
+                0x1: Level(20, 24, {
+                       0x0: Level(6, 11, {
+                           0x0: InstD8("e_ldmvgprw", "VLE", ["RA", "D8"]),
+                           0x1: InstD8("e_ldmvsprw", "VLE", ["RA", "D8"]),
+                           0x4: InstD8("e_ldmvsrrw", "VLE", ["RA", "D8"]),
+                           0x5: InstD8("e_ldmvcsrrw", "VLE", ["RA", "D8"]),
+                           0x6: InstD8("e_ldmvdsrrw", "VLE", ["RA", "D8"]),
+                       }),
+                       0x1: Level(6, 11, {
+                           0x0: InstD8("e_stmvgprw", "VLE", ["RA", "D8"]),
+                           0x1: InstD8("e_stmvsprw", "VLE", ["RA", "D8"]),
+                           0x4: InstD8("e_stmvsrrw", "VLE", ["RA", "D8"]),
+                           0x5: InstD8("e_stmvcsrrw", "VLE", ["RA", "D8"]),
+                           0x6: InstD8("e_stmvdsrrw", "VLE", ["RA", "D8"]),
+                       }),
+                })
+                ,
                 0x8: InstSCI8("e_addi", "VLE", ["RT", "RA", "sci8", "Rc"]),
                 0x9: InstSCI8("e_addic", "VLE", ["RT", "RA", "sci8", "Rc"]),
                 0xA: Level(20, 21, {
