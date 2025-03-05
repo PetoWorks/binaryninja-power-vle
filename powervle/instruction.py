@@ -119,7 +119,7 @@ class Instruction:
     def mnemonic(self) -> str:
         mnemonic = self.name
         if self.conditional_branch:
-            mnemonic = mnemonic + self.branch_condition
+            mnemonic = mnemonic[:-1] + self.branch_condition
         if "LK" in self.operands:
             mnemonic += "l" if self.get_operand_value("LK") == 1 else ""
         if "Rc" in self.operands:
