@@ -297,7 +297,7 @@ class PowerVLE(Architecture):
     categories = [PowerCategory.VLE, PowerCategory.B, PowerCategory.SP,
                   PowerCategory.E, PowerCategory.E_CD, PowerCategory.E_CI,
                   PowerCategory.ECL, PowerCategory.E_PD, PowerCategory.E_PC,
-                  PowerCategory.E_PM, PowerCategory.MA, PowerCategory.WT, PowerCategory.V]
+                  PowerCategory.E_PM, PowerCategory.MA, PowerCategory.WT]
 
     def __init__(self):
         super().__init__()
