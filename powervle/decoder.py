@@ -31,7 +31,7 @@ class PowerCategory(Flag):
     E_MF = auto()
     E_PM = auto()
     E_PC = auto()
-    ECL = auto()
+    E_CL = auto()
     EXC = auto()
     EXP = auto()
     FP = auto()
@@ -1146,15 +1146,15 @@ class Decoder:
         }),
 
         # E.CL Category
-        PowerCategory.ECL: Level(0, 4, {
+        PowerCategory.E_CL: Level(0, 4, {
             0x7: Level(0, 6, {
                 0b011111: Level(27, 31, {
                     0x6: Level(21, 27, {
-                        0b001000: InstX("dcbtstls", "ECL", ["CT", "RA", "RB"]),
-                        0b001010: InstX("dcbtls", "ECL", ["CT", "RA", "RB"]),
-                        0b001110: InstX("icblc", "ECL", ["CT", "RA", "RB"]),
-                        0b011000: InstX("dcblc", "ECL", ["CT", "RA", "RB"]),
-                        0b011110: InstX("icbtls", "ECL", ["CT", "RA", "RB"]),
+                        0b001000: InstX("dcbtstls", "E_CL", ["CT", "RA", "RB"]),
+                        0b001010: InstX("dcbtls", "E_CL", ["CT", "RA", "RB"]),
+                        0b001110: InstX("icblc", "E_CL", ["CT", "RA", "RB"]),
+                        0b011000: InstX("dcblc", "E_CL", ["CT", "RA", "RB"]),
+                        0b011110: InstX("icbtls", "E_CL", ["CT", "RA", "RB"]),
                     }),
                 }),
             }),
