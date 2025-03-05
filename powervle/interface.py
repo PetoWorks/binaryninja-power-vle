@@ -296,7 +296,7 @@ class PowerVLE(Architecture):
 
     categories = [PowerCategory.VLE, PowerCategory.B, PowerCategory.SP,
                   PowerCategory.E, PowerCategory.E_CD, PowerCategory.E_CI,
-                  PowerCategory.ECL, PowerCategory.E_PD, PowerCategory.E_PC,
+                  PowerCategory.E_CL, PowerCategory.E_PD, PowerCategory.E_PC,
                   PowerCategory.E_PM, PowerCategory.MA, PowerCategory.WT]
 
     def __init__(self):
@@ -314,7 +314,6 @@ class PowerVLE(Architecture):
 
         instruction = self.decode(data, addr)
         if not instruction:
-            #info.length = 4
             info.length = 2
             return info
 
