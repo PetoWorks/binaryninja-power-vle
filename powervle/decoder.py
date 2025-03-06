@@ -1255,27 +1255,28 @@ class Decoder:
 
     }
 
-    def __init__(self, categories: PowerCategory = None, mode: str = "SPE"):
+    def __init__(self, categories: PowerCategory = None, mode: str = "SPEenable"):
         self.mode = mode.upper()
         base_map = Decoder.VLE_INST_TABLE.map()
+        if categories is None:
+            categories = []
         self.x64 = PowerCategory.X64 in categories if categories else False
-        if self.mode == "SPE":
-            if categories:
-                for cat in categories:
-                    if cat in (PowerCategory.VLE, PowerCategory.V, PowerCategory.LMA):
-                        continue
+        if self.mode == "SPEENABLE":
+            for cat in categories:
+                if cat in (PowerCategory.VLE, PowerCategory.V):
+                    continue
+                if cat in self.VLE_INST_EXTRA:
                     base_map = self.VLE_INST_EXTRA[cat].map(base_map)
             self.map = base_map
-        elif self.mode == "VECTOR":
-            self.map = Decoder.VLE_INST_TABLE.map()
-            if categories and PowerCategory.V in categories:
-                self.map = self.VLE_INST_EXTRA[PowerCategory.V].map(self.map)
-        elif self.mode == "LEGACY":
-            self.map = Decoder.VLE_INST_TABLE.map()
-            if categories and PowerCategory.LMA in categories:
-                self.map = self.VLE_INST_EXTRA[PowerCategory.LMA].map(self.map)
+        elif self.mode == "SPEDISABLE":
+            for cat in categories:
+                if cat == PowerCategory.SP:
+                    continue
+                if cat in self.VLE_INST_EXTRA:
+                    base_map = self.VLE_INST_EXTRA[cat].map(base_map)
+            self.map = base_map
         else:
-            raise ValueError("Unknown mode. Supported modes: SPE, VECTOR, LEGACY.")
+            raise ValueError("Unknown mode. Supported modes: SPEenable, SPEdisable.")
 
     def __call__(self, data: bytes, addr: int = 0) -> Instruction | None:
         return self.decode(data, addr)
