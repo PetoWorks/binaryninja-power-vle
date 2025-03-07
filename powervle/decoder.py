@@ -1263,7 +1263,7 @@ class Decoder:
         self.x64 = PowerCategory.X64 in categories if categories else False
         if self.mode == "SPEENABLE":
             for cat in categories:
-                if cat in (PowerCategory.VLE, PowerCategory.V):
+                if cat in (PowerCategory.V): # TODO: PowerCategory.LMA
                     continue
                 if cat in self.VLE_INST_EXTRA:
                     base_map = self.VLE_INST_EXTRA[cat].map(base_map)
