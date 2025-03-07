@@ -14,6 +14,11 @@ from .store import lift_store_instructions
 from .multiple import lift_multiple_instructions
 from .branch import lift_branch_instructions, lift_cond_branch_instructions, lift_indirect_branch_instructions
 
+from .load_b import lift_b_load_instructions
+from .store_b import lift_b_store_instructions
+from .arithmetic_b import (lift_b_add_instructions, lift_b_sub_instructions, 
+lift_b_neg_instructions, lift_b_mul_instructions, lift_b_div_instructions)
+from .compare_b import lift_b_compare_instructions
 
 InstLiftFuncType = Callable[[Instruction, LowLevelILFunction], None] 
 
@@ -126,4 +131,61 @@ InstLiftTable: dict[str, InstLiftFuncType] = {
     "e_rlwi"     : lift_shift_instructions,
     "e_slwi"     : lift_shift_instructions,
     "e_srwi"     : lift_shift_instructions,
+
+    "lbzx"       : lift_b_load_instructions,
+    "lbzux"      : lift_b_load_instructions,
+    "lhzx"       : lift_b_load_instructions,
+    "lhzux"      : lift_b_load_instructions,
+    "lhax"       : lift_b_load_instructions,
+    "lhaux"      : lift_b_load_instructions,
+    "lwzx"       : lift_b_load_instructions,
+    "lwzux"      : lift_b_load_instructions,
+
+    "stbx"       : lift_b_store_instructions,
+    "stbux"      : lift_b_store_instructions,
+    "sthx"       : lift_b_store_instructions,
+    "sthux"      : lift_b_store_instructions,
+    "stwx"       : lift_b_store_instructions,
+    "stwux"      : lift_b_store_instructions,
+
+    "lhbrx"      : lift_b_load_instructions,
+    "lwbrx"      : lift_b_load_instructions,
+
+    "add"        : lift_b_add_instructions,
+    "addo"       : lift_b_add_instructions,
+    "addc"       : lift_b_add_instructions,
+    "addco"      : lift_b_add_instructions,
+    "adde"       : lift_b_add_instructions,
+    "addeo"      : lift_b_add_instructions,
+    "addme"      : lift_b_add_instructions,
+    "addmeo"     : lift_b_add_instructions,
+    "addze"      : lift_b_add_instructions,
+    "addzeo"     : lift_b_add_instructions,
+
+    "subf"       : lift_b_sub_instructions,
+    "subfo"      : lift_b_sub_instructions,
+    "subfc"      : lift_b_sub_instructions,
+    "subfco"     : lift_b_sub_instructions,
+    "subfe"      : lift_b_sub_instructions,
+    "subfeo"     : lift_b_sub_instructions,
+    "subfme"     : lift_b_sub_instructions,
+    "subfmeo"    : lift_b_sub_instructions,
+    "subfze"     : lift_b_sub_instructions,
+    "subfzeo"    : lift_b_sub_instructions,
+
+    "neg"        : lift_b_neg_instructions,
+    "nego"       : lift_b_neg_instructions,
+
+    "mullw"      : lift_b_mul_instructions,
+    "mullwo"     : lift_b_mul_instructions,
+    "mulhwu"     : lift_b_mul_instructions,
+    "mulhw"      : lift_b_mul_instructions,
+
+    "divw"       : lift_b_div_instructions,
+    "divwo"      : lift_b_div_instructions,
+    "divwu"      : lift_b_div_instructions,
+    "divwuo"     : lift_b_div_instructions,
+
+    "cmp"        : lift_b_compare_instructions,
+    "cmpl"       : lift_b_compare_instructions,
 }
