@@ -1284,12 +1284,28 @@ class Decoder:
 
     }
 
-    def __init__(self, categories: PowerCategory = None):
-        self.map = Decoder.VLE_INST_TABLE.map()
-        self.x64 = PowerCategory.X64 in categories
-        for cat in PowerCategory:
-            if cat != PowerCategory.VLE and cat in categories:
-                self.map = self.VLE_INST_EXTRA[cat].map(self.map)
+    def __init__(self, categories: PowerCategory = None, mode: str = "SPEenable"):
+        self.mode = mode.upper()
+        base_map = Decoder.VLE_INST_TABLE.map()
+        if categories is None:
+            categories = []
+        self.x64 = PowerCategory.X64 in categories if categories else False
+        if self.mode == "SPEENABLE":
+            for cat in categories:
+                if cat in (PowerCategory.V): # TODO: PowerCategory.LMA
+                    continue
+                if cat in self.VLE_INST_EXTRA:
+                    base_map = self.VLE_INST_EXTRA[cat].map(base_map)
+            self.map = base_map
+        elif self.mode == "SPEDISABLE":
+            for cat in categories:
+                if cat == PowerCategory.SP:
+                    continue
+                if cat in self.VLE_INST_EXTRA:
+                    base_map = self.VLE_INST_EXTRA[cat].map(base_map)
+            self.map = base_map
+        else:
+            raise ValueError("Unknown mode. Supported modes: SPEenable, SPEdisable.")
 
     def __call__(self, data: bytes, addr: int = 0) -> Instruction | None:
         return self.decode(data, addr)
