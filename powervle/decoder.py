@@ -1270,7 +1270,6 @@ class Decoder:
                 }),
             }),
         }),
-        #PowerCategory.V: Level(0, 4, {}),
 
         PowerCategory.WT: Level(0, 4, {
             0x7: Level(0, 6, {
