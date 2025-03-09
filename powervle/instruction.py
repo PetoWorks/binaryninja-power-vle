@@ -114,6 +114,12 @@ class Instruction:
             li20 = self.get_field_value("li20")
             if li20 != None:
                 return sign_extend(li20, 20)
+    
+    def get_spr_name(spr):
+        spr_map = {1:"xer", 8: "lr", 9: "ctr"}
+        if spr in spr_map:
+            return spr_map[spr]
+        return None
 
     @property
     def mnemonic(self) -> str:

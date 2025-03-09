@@ -65,13 +65,26 @@ class PowerVLE(Architecture):
     max_instr_length = 4
 
     regs = {
+        'cr': RegisterInfo("xer", 4, 0), ## TODO
+        'xer': RegisterInfo("xer", 4, 0), ## TODO
+
         'lr': RegisterInfo("lr", 4, 0),
         'ctr': RegisterInfo("ctr", 4, 0),
-        'srr': RegisterInfo("srr", 4, 0),
-        'srr0': RegisterInfo("srr0", 4, 0),
+        
+        'srr0': RegisterInfo("srr0", 4, 0), 
         'srr1': RegisterInfo("srr1", 4, 0),
-        'msr': RegisterInfo("msr", 4, 0),
-        'esr': RegisterInfo("esr", 4, 0),
+
+        'csrr0': RegisterInfo("csrr0", 4, 0), 
+        'csrr1': RegisterInfo("csrr1", 4, 0),
+        'dsrr0': RegisterInfo("dsrr0", 4, 0), 
+        'dsrr1': RegisterInfo("dsrr1", 4, 0),
+        'mcsrr0': RegisterInfo("mcsrr0", 4, 0), 
+        'mcsrr1': RegisterInfo("mcsrr1", 4, 0),
+
+
+        'msr': RegisterInfo("msr", 4, 0), ## TODO
+        'esr': RegisterInfo("esr", 4, 0), ## TODO
+
         'r0': RegisterInfo("r0", 4, 0),
         'r1': RegisterInfo("r1", 4, 0),
         'r2': RegisterInfo("r2", 4, 0),

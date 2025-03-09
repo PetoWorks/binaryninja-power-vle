@@ -78,7 +78,7 @@ def lift_b_load_instructions(inst: Instruction, il: LowLevelILFunction) -> None:
             ei0 = il.set_reg(il.arch.address_size, ra, EA)
             il.append(ei0)
     
-    elif inst.name == ["lhbrx", "lwbrx"]:
+    elif inst.name in ["lhbrx", "lwbrx"]:
         assert len(inst.operands) == 3
         rt = inst.get_operand_value(oper_0)
         ra = inst.get_operand_value(oper_1)
@@ -100,6 +100,5 @@ def lift_b_load_instructions(inst: Instruction, il: LowLevelILFunction) -> None:
             swap = byte_reverse_register(il, rt, 4)
 
         il.append(il.set_reg(il.arch.address_size, rt, swap))
-    
     else:
         il.append(il.unimplemented())
