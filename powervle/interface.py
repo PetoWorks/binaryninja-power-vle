@@ -460,8 +460,37 @@ class PowerVLE(Architecture):
             
             if fn:
                 left = get_expr_op(il, op, operands, size)
-                write = il.const(size, 0)
-                return fn(size, left, write)
+                right = il.const(size, 0)
+                return fn(size, left, right)
+            
+        if flag == "xer_ca":
+            if op.name == "LLIL_ASR":
+
+                if isinstance(operands[1], int):
+                    mask = (1 << operands[1]) - 1
+                    if ~mask:
+                        return il.const(0, 0)
+                    maskExpr = il.const(size, mask)
+                else:
+                    maskExpr = get_expr(il, operands[1], size)
+                    maskExpr = il.sub(size, 
+                        il.shift_left(size,
+                            il.const(size, 1),
+                            maskExpr),
+                        il.const(size, 1)
+                   )
+                return il.and_expr(0,
+                    il.compare_signed_less_than(size,
+                        il.get_expr(il, operands[0], size),
+                        il.const(size, 0)
+                    ),
+                    il.compare_not_equal(size,
+                        il.and_expr(size,
+                            il.get_expr(il, operands[0], size),
+                            maskExpr),
+                        il.const(size, 0)
+                    )
+                )
 
         return super().get_flag_write_low_level_il(op, size, write_type, flag, operands, il)
 
