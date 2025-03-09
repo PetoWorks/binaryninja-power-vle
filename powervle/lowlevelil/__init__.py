@@ -19,6 +19,8 @@ from .store_b import lift_b_store_instructions
 from .arithmetic_b import (lift_b_add_instructions, lift_b_sub_instructions, 
 lift_b_neg_instructions, lift_b_mul_instructions, lift_b_div_instructions)
 from .compare_b import lift_b_compare_instructions
+from .logical_b import lift_b_logical_instructions
+from .shift_b import lift_b_shift_instructions
 
 InstLiftFuncType = Callable[[Instruction, LowLevelILFunction], None] 
 
@@ -188,4 +190,22 @@ InstLiftTable: dict[str, InstLiftFuncType] = {
 
     "cmp"        : lift_b_compare_instructions,
     "cmpl"       : lift_b_compare_instructions,
+
+    "and"        : lift_b_logical_instructions,
+    "nand"       : lift_b_logical_instructions,
+    "andc"       : lift_b_logical_instructions,
+    "or"         : lift_b_logical_instructions,
+    "nor"        : lift_b_logical_instructions,
+    "orc"        : lift_b_logical_instructions,
+    "xor"        : lift_b_logical_instructions,
+    "eqv"        : lift_b_logical_instructions,
+    "extsb"      : lift_b_logical_instructions,
+    "extsh"      : lift_b_logical_instructions,
+    # "cntlzw"     : lambda inst, il: il.append(il.intrinsic([], "cntlzw", [])),
+    # "popcntb"    : lambda inst, il: il.append(il.intrinsic([], "popcntb", [])),
+
+    "slw"        : lift_b_shift_instructions,
+    "srw"        : lift_b_shift_instructions,
+    "sraw"       : lift_b_shift_instructions,
+    "srawi"      : lift_b_shift_instructions,
 }
