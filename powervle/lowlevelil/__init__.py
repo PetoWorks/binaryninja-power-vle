@@ -21,6 +21,7 @@ lift_b_neg_instructions, lift_b_mul_instructions, lift_b_div_instructions)
 from .compare_b import lift_b_compare_instructions
 from .logical_b import lift_b_logical_instructions
 from .shift_b import lift_b_shift_instructions
+from .move_sysreg_b import lift_b_move_sysreg_instructions
 
 InstLiftFuncType = Callable[[Instruction, LowLevelILFunction], None] 
 
@@ -161,6 +162,8 @@ InstLiftTable: dict[str, InstLiftFuncType] = {
     "sthux"      : lift_b_store_instructions,
     "stwx"       : lift_b_store_instructions,
     "stwux"      : lift_b_store_instructions,
+    "sthbrx"     : lift_b_store_instructions,
+    "stwbrx"     : lift_b_store_instructions,
 
     "lhbrx"      : lift_b_load_instructions,
     "lwbrx"      : lift_b_load_instructions,
@@ -220,4 +223,7 @@ InstLiftTable: dict[str, InstLiftFuncType] = {
     "srw"        : lift_b_shift_instructions,
     "sraw"       : lift_b_shift_instructions,
     "srawi"      : lift_b_shift_instructions,
+
+    "mtspr"      : lift_b_move_sysreg_instructions,
+    "mfspr"      : lift_b_move_sysreg_instructions,
 }
