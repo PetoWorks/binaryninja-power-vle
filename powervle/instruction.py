@@ -115,10 +115,13 @@ class Instruction:
             if li20 != None:
                 return sign_extend(li20, 20)
     
-    def get_spr_name(spr):
+    def get_spr_name(self, spr: str) -> str | None:
         spr_map = {1:"xer", 8: "lr", 9: "ctr"}
-        if spr in spr_map:
-            return spr_map[spr]
+        
+        spr_value = self.get_field_value(spr)
+        spr_id = (spr_value >> 5) | ((spr_value & 0x1f) << 5)
+        if spr_id in spr_map:
+            return spr_map[spr_id]
         return None
 
     @property
