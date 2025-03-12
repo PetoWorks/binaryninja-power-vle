@@ -1,5 +1,5 @@
 from typing import Tuple, List
-
+from binaryninja import LowLevelILOperation
 from binaryninja import Intrinsic, IntrinsicInfo, Type
 from binaryninja.log import log_warn, log_error, log_debug
 
@@ -65,8 +65,8 @@ class PowerVLE(Architecture):
     max_instr_length = 4
 
     regs = {
-        'cr': RegisterInfo("xer", 4, 0), ## TODO
-        'xer': RegisterInfo("xer", 4, 0), ## TODO
+        'cr': RegisterInfo("xer", 4, 0),
+        'xer': RegisterInfo("xer", 4, 0),
 
         'lr': RegisterInfo("lr", 4, 0),
         'ctr': RegisterInfo("ctr", 4, 0),
@@ -81,9 +81,8 @@ class PowerVLE(Architecture):
         'mcsrr0': RegisterInfo("mcsrr0", 4, 0), 
         'mcsrr1': RegisterInfo("mcsrr1", 4, 0),
 
-
-        'msr': RegisterInfo("msr", 4, 0), ## TODO
-        'esr': RegisterInfo("esr", 4, 0), ## TODO
+        'msr': RegisterInfo("msr", 4, 0),
+        'esr': RegisterInfo("esr", 4, 0),
 
         'r0': RegisterInfo("r0", 4, 0),
         'r1': RegisterInfo("r1", 4, 0),
@@ -246,7 +245,7 @@ class PowerVLE(Architecture):
         'cr7so': FlagRole.SpecialFlagRole,
         'xer_so': FlagRole.SpecialFlagRole,
         'xer_ov': FlagRole.OverflowFlagRole,
-        'xer_ca': FlagRole.CarryFlagRole
+        'xer_ca': FlagRole.CarryFlagRole,
     }
 
     flag_write_types = [
@@ -464,7 +463,7 @@ class PowerVLE(Architecture):
                 return fn(size, left, right)
             
         if flag == "xer_ca":
-            if op.name == "LLIL_ASR":
+            if op == LowLevelILOperation.LLIL_ASR:
 
                 if isinstance(operands[1], int):
                     mask = (1 << operands[1]) - 1
