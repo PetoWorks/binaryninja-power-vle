@@ -409,15 +409,15 @@ class Decoder:
                         0xC: Level(28, 32, {
                             0x0: InstEVX("efsadd", "SP.FS", ["RT", "RA", "RB"]),
                             0x1: InstEVX("efssub", "SP.FS", ["RT", "RA", "RB"]),
-                            0x2: InstEVX("efsmadd", "SP.FS", ["RT", "RA", "RB"]),   # CHECK
-                            0x3: InstEVX("efsmsub", "SP.FS", ["RT", "RA", "RB"]),   # CHECK
+                            0x2: InstEVX("efsmadd", "SP.FS", ["RT", "RA", "RB"]),  
+                            0x3: InstEVX("efsmsub", "SP.FS", ["RT", "RA", "RB"]),
                             0x4: InstEVX("efsabs", "SP.FS", ["RT", "RA"]),
                             0x5: InstEVX("efsnabs", "SP.FS", ["RT", "RA"]),
                             0x6: InstEVX("efsneg", "SP.FS", ["RT", "RA"]),
                             0x8: InstEVX("efsmul", "SP.FS", ["RT", "RA", "RB"]),
                             0x9: InstEVX("efsdiv", "SP.FS", ["RT", "RA", "RB"]),
-                            0xA: InstEVX("efsnmadd", "SP.FS", ["RT", "RA", "RB"]),  # CHECK
-                            0xB: InstEVX("efsnmsub", "SP.FS", ["RT", "RA", "RB"]),  # CHECK
+                            0xA: InstEVX("efsnmadd", "SP.FS", ["RT", "RA", "RB"]),  
+                            0xB: InstEVX("efsnmsub", "SP.FS", ["RT", "RA", "RB"]),  
                             0xC: InstEVX("efscmpgt", "SP.FS", ["BF", "RA", "RB"]),
                             0xD: InstEVX("efscmplt", "SP.FS", ["BF", "RA", "RB"]),
                             0xE: InstEVX("efscmpeq", "SP.FS", ["BF", "RA", "RB"]),

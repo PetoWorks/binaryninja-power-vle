@@ -1,10 +1,12 @@
 from binaryninja.lowlevelil import LowLevelILFunction
 from ..instruction import Instruction
+from binaryninja.log import log_warn, log_error, log_debug
 
-regs = ['r0', 'r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'r7', 'r8', 'r9', \
+GPR = ['r0', 'r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'r7', 'r8', 'r9', \
         'r10', 'r11', 'r12', 'r13', 'r14', 'r15', 'r16', 'r17', 'r18', 'r19', \
         'r20', 'r21', 'r22', 'r23', 'r24', 'r25', 'r26', 'r27', 'r28', 'r29', \
         'r30', 'r31']
+
 def get_EA(il: LowLevelILFunction, ra, d8):
     if ra == 0:
         EA = il.sign_extend(4, il.const(4, d8))
@@ -25,14 +27,14 @@ def lift_multiple_instructions(inst: Instruction, il: LowLevelILFunction) -> Non
         ra = inst.get_operand_value(oper_1)
         d8 = inst.get_operand_value(oper_2)
 
-        i = regs.index(rt)
-        if ra in regs[i:]:
+        i = GPR.index(rt)
+        if ra in GPR[i:]:
             il.append(il.unimplemented())
             return
         
         EA = get_EA(il, ra, d8)
         while i <= 31:
-            ei0 = il.set_reg(4, regs[i], il.zero_extend(4, il.load(4, EA)))
+            ei0 = il.set_reg(4, GPR[i], il.zero_extend(4, il.load(4, EA)))
             il.append(ei0)
             i += 1
             d8 += 4
@@ -52,7 +54,7 @@ def lift_multiple_instructions(inst: Instruction, il: LowLevelILFunction) -> Non
         while i <= 12:
             d8 += 4
             EA = get_EA(il, ra, d8)
-            ei0 = il.set_reg(4, regs[i], il.load(4, EA))
+            ei0 = il.set_reg(4, GPR[i], il.load(4, EA))
             il.append(ei0)
             i += 1
 
@@ -66,18 +68,19 @@ def lift_multiple_instructions(inst: Instruction, il: LowLevelILFunction) -> Non
         ra = inst.get_operand_value(oper_0)
         d8 = inst.get_operand_value(oper_1)
 
+        special = []
         if inst.name == "e_lmvsprw":
-            regs = ["cr", "lr", "ctr", "xer"]
+            special = ["cr", "lr", "ctr", "xer"]
         elif inst.name == "e_lmvssrw":
-            regs = ["srr0", "srr1"]
+            special = ["srr0", "srr1"]
         elif inst.name == "e_lmvcsrrw":
-            regs = ["csrr0", "csrr1"]
+            special = ["csrr0", "csrr1"]
         elif inst.name == "e_lmvdsrrw":
-            regs = ["dsrr0", "dsrr1"]
+            special = ["dsrr0", "dsrr1"]
         elif inst.name == "e_lmvmcsrrw":
-            regs = ["mcsrr0", "mcsrr1"]
+            special = ["mcsrr0", "mcsrr1"]
 
-        for ei0 in regs:
+        for ei0 in special:
             EA = get_EA(il, ra, d8)
             ei1 = il.set_reg(4, ei0, il.load(4, EA))
             il.append(ei1)
@@ -89,10 +92,10 @@ def lift_multiple_instructions(inst: Instruction, il: LowLevelILFunction) -> Non
         rs = inst.get_operand_value(oper_0)
         ra = inst.get_operand_value(oper_1)
         d8 = inst.get_operand_value(oper_2)
-        i = regs.index(rs)
+        i = GPR.index(rs)
         EA = get_EA(il, ra, d8)
         while i <= 31:
-            ei0 = il.store(4, EA, il.reg(4, regs[i]))
+            ei0 = il.store(4, EA, il.reg(4, GPR[i]))
             il.append(ei0)       
             i += 1
             d8 += 4
@@ -112,7 +115,7 @@ def lift_multiple_instructions(inst: Instruction, il: LowLevelILFunction) -> Non
         while i <= 12:
             d8 += 4
             EA = get_EA(il, ra, d8)
-            ei0 = il.store(4, EA, il.reg(4, regs[i]))
+            ei0 = il.store(4, EA, il.reg(4, GPR[i]))
             il.append(ei0)
             i += 1
     
@@ -126,18 +129,19 @@ def lift_multiple_instructions(inst: Instruction, il: LowLevelILFunction) -> Non
         ra = inst.get_operand_value(oper_0)
         d8 = inst.get_operand_value(oper_1)
 
+        special = []
         if inst.name == "e_stmvsprw":
-            regs = ["cr", "lr", "ctr", "xer"]
+            special = ["cr", "lr", "ctr", "xer"]
         elif inst.name == "e_stmvssrw":
-            regs = ["srr0", "srr1"]
+            special = ["srr0", "srr1"]
         elif inst.name == "e_stmvcsrrw":
-            regs = ["csrr0", "csrr1"]
+            special = ["csrr0", "csrr1"]
         elif inst.name == "e_stmvdsrrw":
-            regs = ["dsrr0", "dsrr1"]
+            special = ["dsrr0", "dsrr1"]
         elif inst.name == "e_stmvmcsrrw":
-            regs = ["mcsrr0", "mcsrr1"]
+            special = ["mcsrr0", "mcsrr1"]
 
-        for ei0 in regs:
+        for ei0 in special:
             EA = get_EA(il, ra, d8)
             ei1 = il.store(4, EA, il.reg(4, ei0))
             il.append(ei1)
