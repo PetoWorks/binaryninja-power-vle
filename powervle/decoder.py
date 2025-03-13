@@ -1311,6 +1311,6 @@ class Decoder:
 
     def decode(self, data: bytes, addr: int = 0) -> Instruction | None:
         target = int.from_bytes(data[:4] if len(data) >= 4 else data + b'\0\0', 'big')
-        instruction = self.map.decode(target)
-        if instruction and len(data) >= instruction.length:
-            return instruction(target, addr, self.x64)
+        inst_cls = self.map.decode(target)
+        if inst_cls and len(data) >= inst_cls._length:
+            return inst_cls(target, addr, self.x64)
