@@ -15,6 +15,11 @@
     "Linux",
     "Windows"
   ],
+  "dependencies": {
+    "pip": [
+      "typing_extensions"
+    ]
+  },
   "version": "0.0.1",
   "author": "Dohyeon Kim (@d0now) of Peto Works",
   "minimumbinaryninjaversion": 3164
