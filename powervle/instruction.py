@@ -121,12 +121,12 @@ class Instruction:
     
     def get_spr_name(self, spr_value: int) -> str | None:
         spr_map = {1:"xer", 8: "lr", 9: "ctr", 26: "srr0", 27: "srr1", 48: "pid",
-                   63: "ivpr", 256: "vrsave", 272: "sprg0", 273: "sprg1", 308: "dbcr0",
+                   63: "ivpr", 256: "vrsave", 272: "sprg0", 273: "sprg1", 286: "pir", 308: "dbcr0",
                    400: "ivor0", 401: "ivor1", 402: "ivor2", 403: "ivor3", 404: "ivor4",
                    405: "ivor5", 406: "ivor6", 407: "ivor7", 408: "ivor8", 409: "ivor9",
                    410: "ivor10", 411: "ivor11", 412: "ivor12", 413: "ivor13", 414: "ivor14",
                    415: "ivor15", 512: "spefscr", 528: "ivor33", 529: "ivor34", 530: "ivor35", 
-                   568: "iac8", 896: "ppr", 1023: "svr"}
+                   568: "iac8", 572: "mcsr", 896: "ppr", 1023: "svr"}
         spr_id = (spr_value >> 5) | ((spr_value & 0x1f) << 5)
         if spr_id in spr_map:
             return spr_map[spr_id]

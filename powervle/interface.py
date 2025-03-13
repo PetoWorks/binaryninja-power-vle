@@ -111,6 +111,8 @@ class PowerVLE(Architecture):
         'ivor35': RegisterInfo("ivor35", 4, 0),
         'iac8'  : RegisterInfo("iac8", 4, 0),
         'svr'   : RegisterInfo("svr", 4, 0),
+        'pir'   : RegisterInfo("pir", 4, 0),
+        'mcsr'  : RegisterInfo("mcsr", 4, 0),
 
         # gpr
         'r0': RegisterInfo("r0", 4, 0),
