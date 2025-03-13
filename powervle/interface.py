@@ -451,7 +451,7 @@ class PowerVLE(Architecture):
     ) -> ExpressionIndex:
 
         if write_type.startswith("mtcr"):
-            return il.unimplemented() # TODO
+            return il.test_bit(4, get_expr_op(il, op, operands, size), il.const(4, 31 - self.flags.index(flag)))
 
         if write_type.startswith("inv"):
             return il.unimplemented()
