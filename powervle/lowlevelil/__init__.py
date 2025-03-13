@@ -24,6 +24,7 @@ from .shift_b import lift_b_shift_instructions
 from .spe_fs import lift_sp_fss_instructions
 from .move_sysreg_b import lift_b_move_sysreg_instructions
 #from .move_sysreg_e import lift_e_move_sysreg_instructions
+from .select_b import lift_b_select_instructions
 
 InstLiftFuncType = Callable[[Instruction, LowLevelILFunction], None] 
 
@@ -255,6 +256,6 @@ InstLiftTable: dict[str, InstLiftFuncType] = {
     # "efscfui"   : lift_sp_fss_instructions,
     # "efscfsi"   : lift_sp_fss_instructions,
 
-    # "lwdcbx" : lift_???_b_instructions,
-
+    # "lwdcbx" : lift_b_???_instructions,
+    "isel" : lift_b_select_instructions,
 }
