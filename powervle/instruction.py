@@ -11,18 +11,20 @@ def scimm(f: int, scl: int, ui8: int) -> int:
 
 
 class Instruction:
-    name: str
-    category: str
-    length: int
-    fields: dict[str, tuple[int, int]]
-    operands: list[str]
-    branch: bool = False
-    conditional_branch: bool = False
+    _name: str = None
+    _category: str = None
+    _length: int = None
+    _fields: dict[str, tuple[int, int]] = None
+    _operands: list[str] = None
+    _branch: bool = False
+    _conditional_branch: bool = False
 
     _bcmap = (
         ("ge", "le", "ne", "ns", "dnz"),
         ("lt", "gt", "eq", "so", "dz"),
     )
+
+    _move_spr_skipable_registers = ("xer", "lr", "ctr", "srr0", "srr1", "pid")
 
     def __init__(self, data: int, addr: int, x64: bool = False):
         self.data = (data >> (32 - self.length * 8)) & ((1 << (self.length * 8)) - 1)
@@ -34,7 +36,7 @@ class Instruction:
             return get_bits_from_int(self.data, self.length * 8, *field)
 
     def get_operand_value(self, name: str) -> int | str | None:
-        if name in self.operands:
+        if name in self._operands:
             if (value := self.get_field_value(name)) == None:
                 return self.get_extended_operand_value(name)
             if name in ("RA", "RB", "RT", "RS"):
@@ -129,16 +131,96 @@ class Instruction:
         if spr_id in spr_map:
             return spr_map[spr_id]
         return f"spr{str(spr_id)}"
+    
+    def is_operand_skipped(self, operand: str) -> bool:
+        if operand in ("Rc", "LK", "OE"):
+            return True
+
+        if operand in ("mtspr", "mfspr"):
+            spr = self.get_operand_value("SPR")
+            return spr in self._move_spr_skipable_registers
+
+        if operand in ("mtcrf", ):
+            fxm = self.get_operand_value(self._operands[0])
+            return fxm == 0b11111111 
+        
+        return False
+
+    @property
+    def name(self) -> str:
+        return self._name
+    
+    @property
+    def category(self) -> str:
+        return self._category
+    
+    @property
+    def length(self) -> int:
+        return self._length
+    
+    @property
+    def fields(self) -> dict[str, tuple[int, int]]:
+        return self._fields
+
+    @property
+    def actual_operands(self) -> list[str]:
+        return self._operands
+
+    @property
+    def operands(self) -> list[str]:
+        operands = [*self._operands]
+
+        if self.name in ("mtspr", "mfspr"):
+            spr = self.get_operand_value("SPR")
+            if spr in self._move_spr_skipable_registers:
+                operands.remove("SPR")
+        
+        if self.name in ("mtcrf", ):
+            fxm = self.get_operand_value("FXM")
+            if fxm == 0b11111111:
+                operands.remove("FXM")
+        
+        for skipable in ("Rc", "LK", "OE"):
+            if skipable in operands:
+                operands.remove(skipable)
+
+        return operands
+
+    @property
+    def branch(self) -> bool:
+        return self._branch
+
+    @property
+    def conditional_branch(self) -> bool:
+        return self._conditional_branch
+
+    @property
+    def actual_mnemonic(self) -> str:
+        return self._name
 
     @property
     def mnemonic(self) -> str:
         mnemonic = self.name
+
         if self.conditional_branch:
             mnemonic = mnemonic[:-1] + self.branch_condition
-        if "LK" in self.operands:
+
+        if "LK" in self._operands:
             mnemonic += "l" if self.get_operand_value("LK") == 1 else ""
-        if "Rc" in self.operands:
+
+        if "Rc" in self._operands:
             mnemonic += "." if self.get_operand_value("Rc") == 1 else ""
+
+        if mnemonic in ("mtspr", "mfspr"):
+            spr = self.get_operand_value("SPR")
+            if spr in self._move_spr_skipable_registers:
+                mnemonic = mnemonic[:2] + spr
+
+        if mnemonic == "mtcrf":
+            fxm = self.get_operand_value("FXM")
+            if fxm == 0b11111111:
+                mnemonic = mnemonic[:-1]
+
         return mnemonic
 
     @property
@@ -170,11 +252,11 @@ def Inst(
 ) -> type[Instruction]:
 
     return type(f"Inst_{name}", (Instruction, ), {
-        "name": name,
-        "category": category,
-        "length": length,
-        "fields": fields,
-        "operands": operands,
+        "_name": name,
+        "_category": category,
+        "_length": length,
+        "_fields": fields,
+        "_operands": operands,
         **other
     })
 

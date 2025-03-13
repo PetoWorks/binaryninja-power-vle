@@ -406,42 +406,15 @@ class PowerVLE(Architecture):
             return [InstructionTextToken(InstructionTextTokenType.InstructionToken, "undef")], 2
 
         tokens = []
-        skip_operands = []
 
         mnemonic = instruction.mnemonic
-
-        if mnemonic in ["mtspr", "mfspr"]:
-            spr_extended_mnemonics = ["xer", "lr", "ctr", "srr0", "srr1", "pid"]
-            
-            for index, name in enumerate(instruction.operands):
-                if name == "SPR":
-                    spr = instruction.get_operand_value(name)
-                    log_info(f"spr: {spr}")
-                    if spr in spr_extended_mnemonics:
-                        mnemonic = mnemonic[:2] + spr
-                        log_info(f"extended mnenonic: {mnemonic}")
-                        skip_operands.append(index)
-                    break
-        
-        if mnemonic == "mtcrf":
-            fxm = instruction.get_operand_value(instruction.operands[0])
-            if fxm == 0b11111111:
-                mnemonic = mnemonic[:-1]
-                skip_operands.append(0)
-                
         tokens.append(InstructionTextToken(InstructionTextTokenType.InstructionToken, mnemonic))
         
-        actual_index = 0
         for index, name in enumerate(instruction.operands):
-            if (name in ("Rc", "LK", "OE")) or (index in skip_operands):
-                continue
-
-            if actual_index == 0:
+            if index == 0:
                 tokens.append(InstructionTextToken(InstructionTextTokenType.TextToken, " " * (10 - len(mnemonic))))
             else:
                 tokens.append(InstructionTextToken(InstructionTextTokenType.OperandSeparatorToken, ", "))
-
-            actual_index += 1
 
             operand = instruction.get_operand_value(name)
             if operand == None:
