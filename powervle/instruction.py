@@ -163,11 +163,11 @@ class Instruction:
         return self._fields
 
     @property
-    def actual_operands(self) -> list[str]:
+    def operands(self) -> list[str]:
         return self._operands
 
     @property
-    def operands(self) -> list[str]:
+    def simplified_operands(self) -> list[str]:
         operands = [*self._operands]
 
         if self.name in ("mtspr", "mfspr"):
@@ -195,11 +195,11 @@ class Instruction:
         return self._conditional_branch
 
     @property
-    def actual_mnemonic(self) -> str:
+    def mnemonic(self) -> str:
         return self._name
 
     @property
-    def mnemonic(self) -> str:
+    def simplified_mnemonic(self) -> str:
         mnemonic = self.name
 
         if self.conditional_branch:

@@ -407,10 +407,10 @@ class PowerVLE(Architecture):
 
         tokens = []
 
-        mnemonic = instruction.mnemonic
+        mnemonic = instruction.simplified_mnemonic
         tokens.append(InstructionTextToken(InstructionTextTokenType.InstructionToken, mnemonic))
         
-        for index, name in enumerate(instruction.operands):
+        for index, name in enumerate(instruction.simplified_operands):
             if index == 0:
                 tokens.append(InstructionTextToken(InstructionTextTokenType.TextToken, " " * (10 - len(mnemonic))))
             else:
