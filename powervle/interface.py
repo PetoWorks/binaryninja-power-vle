@@ -1,7 +1,7 @@
 from typing import Tuple, List
 from binaryninja import LowLevelILOperation
 from binaryninja import Intrinsic, IntrinsicInfo, Type
-from binaryninja.log import log_warn, log_error, log_debug
+from binaryninja.log import log_warn, log_error, log_debug, log_info
 
 from binaryninja.architecture import (
     FlagType, FlagWriteTypeName,
@@ -65,25 +65,54 @@ class PowerVLE(Architecture):
     max_instr_length = 4
 
     regs = {
-        'cr': RegisterInfo("xer", 4, 0),
-        'xer': RegisterInfo("xer", 4, 0),
+        # spr
+        'cr'    : RegisterInfo("cr", 4, 0),
 
-        'lr': RegisterInfo("lr", 4, 0),
-        'ctr': RegisterInfo("ctr", 4, 0),
-        
-        'srr0': RegisterInfo("srr0", 4, 0), 
-        'srr1': RegisterInfo("srr1", 4, 0),
+        'xer'   : RegisterInfo("xer", 4, 0),
+        'lr'    : RegisterInfo("lr", 4, 0),
+        'ctr'   : RegisterInfo("ctr", 4, 0),
 
-        'csrr0': RegisterInfo("csrr0", 4, 0), 
-        'csrr1': RegisterInfo("csrr1", 4, 0),
-        'dsrr0': RegisterInfo("dsrr0", 4, 0), 
-        'dsrr1': RegisterInfo("dsrr1", 4, 0),
+        'srr0'  : RegisterInfo("srr0", 4, 0), 
+        'srr1'  : RegisterInfo("srr1", 4, 0),
+        'pid'   : RegisterInfo("pid", 4, 0),
+
+        'csrr0' : RegisterInfo("csrr0", 4, 0), 
+        'csrr1' : RegisterInfo("csrr1", 4, 0),
+        'dsrr0' : RegisterInfo("dsrr0", 4, 0), 
+        'dsrr1' : RegisterInfo("dsrr1", 4, 0),
         'mcsrr0': RegisterInfo("mcsrr0", 4, 0), 
         'mcsrr1': RegisterInfo("mcsrr1", 4, 0),
 
-        'msr': RegisterInfo("msr", 4, 0),
-        'esr': RegisterInfo("esr", 4, 0),
+        'msr'   : RegisterInfo("msr", 4, 0),
+        'esr'   : RegisterInfo("esr", 4, 0),
+        'ivpr'  : RegisterInfo("ivpr", 4, 0),
+        'ppr'   : RegisterInfo("ppr", 4, 0),
+        'sprg0' : RegisterInfo("sprg0", 4, 0),
+        'sprg1' : RegisterInfo("sprg1", 4, 0),
+        'dbcr0' : RegisterInfo("dbcr0", 4, 0),
+        'ivor0' : RegisterInfo("ivor0", 4, 0),
+        'ivor1' : RegisterInfo("ivor1", 4, 0),
+        'ivor2' : RegisterInfo("ivor2", 4, 0),
+        'ivor3' : RegisterInfo("ivor3", 4, 0),
+        'ivor4' : RegisterInfo("ivor4", 4, 0),
+        'ivor5' : RegisterInfo("ivor5", 4, 0),
+        'ivor6' : RegisterInfo("ivor6", 4, 0),
+        'ivor7' : RegisterInfo("ivor7", 4, 0),
+        'ivor8' : RegisterInfo("ivor8", 4, 0),
+        'ivor9' : RegisterInfo("ivor9", 4, 0),
+        'ivor10': RegisterInfo("ivor10", 4, 0),
+        'ivor11': RegisterInfo("ivor11", 4, 0),
+        'ivor12': RegisterInfo("ivor12", 4, 0),
+        'ivor13': RegisterInfo("ivor13", 4, 0),
+        'ivor14': RegisterInfo("ivor14", 4, 0),
+        'ivor15': RegisterInfo("ivor15", 4, 0),
+        'ivor33': RegisterInfo("ivor33", 4, 0),
+        'ivor34': RegisterInfo("ivor34", 4, 0),
+        'ivor35': RegisterInfo("ivor35", 4, 0),
+        'iac8'  : RegisterInfo("iac8", 4, 0),
+        'svr'   : RegisterInfo("svr", 4, 0),
 
+        # gpr
         'r0': RegisterInfo("r0", 4, 0),
         'r1': RegisterInfo("r1", 4, 0),
         'r2': RegisterInfo("r2", 4, 0),
@@ -150,19 +179,19 @@ class PowerVLE(Architecture):
         'v29': RegisterInfo("v29", 16, 0),
         'v30': RegisterInfo("v30", 16, 0),
         'v31': RegisterInfo("v31", 16, 0),
-        'vscr': RegisterInfo("vscr", 4, 0),
+        'vscr'  : RegisterInfo("vscr", 4, 0),
         'vrsave': RegisterInfo("vrsave", 4, 0),
 
         # SP Category
-        'acc': RegisterInfo("acc", 4, 0),
-        'spefscr': RegisterInfo("spefscr", 4, 0),   # Special Register
+        'acc'       : RegisterInfo("acc", 4, 0),
+        'spefscr'   : RegisterInfo("spefscr", 4, 0),   # Special Register
         
         # E.CD Category - Special Register
-        'dcdbtrh': RegisterInfo("dcdbtrh", 4, 0),
-        'dcdbtrl': RegisterInfo("dcdbtrl", 4, 0),
-        'icdbdr': RegisterInfo("icdbdr", 4, 0),
-        'icdbtrh': RegisterInfo("icdbtrh", 4, 0),
-        'icdbtrl': RegisterInfo("icdbtrl", 4, 0),
+        'dcdbtrh'   : RegisterInfo("dcdbtrh", 4, 0),
+        'dcdbtrl'   : RegisterInfo("dcdbtrl", 4, 0),
+        'icdbdr'    : RegisterInfo("icdbdr", 4, 0),
+        'icdbtrh'   : RegisterInfo("icdbtrh", 4, 0),
+        'icdbtrl'   : RegisterInfo("icdbtrl", 4, 0),
 
         # E.PM Category
         'pmgc0': RegisterInfo("pmgc0", 4, 0),
@@ -304,6 +333,9 @@ class PowerVLE(Architecture):
         'rfci'  : IntrinsicInfo([], []),
         'rfdi'  : IntrinsicInfo([], []),
         'rfmci' : IntrinsicInfo([], []),
+        'sync'  : IntrinsicInfo([], []),
+        'wait'  : IntrinsicInfo([], []),
+        'cntlzw'  : IntrinsicInfo([], []),
     }
 
     categories = [PowerCategory.VLE, PowerCategory.B, PowerCategory.SP,
@@ -374,22 +406,43 @@ class PowerVLE(Architecture):
             return [InstructionTextToken(InstructionTextTokenType.InstructionToken, "undef")], 2
 
         tokens = []
+        skip_operands = []
 
         mnemonic = instruction.mnemonic
-        tokens.append(InstructionTextToken(InstructionTextTokenType.InstructionToken, instruction.mnemonic))
 
-        skipped = 0
+        if mnemonic in ["mtspr", "mfspr"]:
+            spr_extended_mnemonics = ["xer", "lr", "ctr", "srr0", "srr1", "pid"]
+            
+            for index, name in enumerate(instruction.operands):
+                if name == "SPR":
+                    spr = instruction.get_operand_value(name)
+                    log_info(f"spr: {spr}")
+                    if spr in spr_extended_mnemonics:
+                        mnemonic = mnemonic[:2] + spr
+                        log_info(f"extended mnenonic: {mnemonic}")
+                        skip_operands.append(index)
+                    break
+        
+        if mnemonic == "mtcrf":
+            fxm = instruction.get_operand_value(instruction.operands[0])
+            if fxm == 0b11111111:
+                mnemonic = mnemonic[:-1]
+                skip_operands.append(0)
+                
+        tokens.append(InstructionTextToken(InstructionTextTokenType.InstructionToken, mnemonic))
+        
+        actual_index = 0
         for index, name in enumerate(instruction.operands):
-
-            if name in ("Rc", "LK", "OE"):
-                skipped += 1
+            if (name in ("Rc", "LK", "OE")) or (index in skip_operands):
                 continue
 
-            if (index - skipped) == 0:
-                tokens.append(InstructionTextToken(InstructionTextTokenType.TextToken, " " * (9 - len(mnemonic))))
+            if actual_index == 0:
+                tokens.append(InstructionTextToken(InstructionTextTokenType.TextToken, " " * (10 - len(mnemonic))))
             else:
                 tokens.append(InstructionTextToken(InstructionTextTokenType.OperandSeparatorToken, ", "))
-            
+
+            actual_index += 1
+
             operand = instruction.get_operand_value(name)
             if operand == None:
                 log_warn(f"instruction {instruction.name} has invalid operand {name}")

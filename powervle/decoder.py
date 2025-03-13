@@ -695,7 +695,7 @@ class Decoder:
                         0b000000: InstX("cmp", "B", ["BF", "L", "RA", "RB"]),
                         0b000010: InstX("cmpl", "B", ["BF", "L", "RA", "RB"]),
                         0b001001: Level(11, 12, {
-                            0: InstXFX("mtcrf", "B", ["RS", "FXM"]),
+                            0: InstXFX("mtcrf", "B", ["FXM", "RS"]),
                             1: InstXFX("mtocrf", "B", ["FXM", "RS"]),
                         }),
                         0b100000: InstX("mcrxr", "B", ["BF"]),
