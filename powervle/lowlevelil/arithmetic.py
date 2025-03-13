@@ -23,8 +23,9 @@ def lift_add_instructions(inst: Instruction, il: LowLevelILFunction) -> None:
         ei0 = il.add(4, il.reg(4, ra), il.const(4, si))
         ei0 = il.set_reg(4, rt, ei0)
         il.append(ei0)
-    elif inst.name in ["e_add2i", "e_add2is"]:  # Add (2 operand) Immediate and Record
-                                                # Add (2 operand) Immediate Shifted
+    # Add (2 operand) Immediate and Record
+    # Add (2 operand) Immediate Shifted
+    elif inst.name in ["e_add2i", "e_add2i.", "e_add2is"]: 
         assert len(inst.operands) == 2
         ra = inst.get_operand_value(oper_0)
         si = inst.get_operand_value(oper_1)

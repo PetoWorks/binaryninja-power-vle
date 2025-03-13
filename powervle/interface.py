@@ -1,7 +1,7 @@
 from typing import Tuple, List
 from binaryninja import LowLevelILOperation
 from binaryninja import Intrinsic, IntrinsicInfo, Type
-from binaryninja.log import log_warn, log_error, log_debug, log_info
+from binaryninja.log import log_warn, log_error, log_debug
 
 from binaryninja.architecture import (
     FlagType, FlagWriteTypeName,
