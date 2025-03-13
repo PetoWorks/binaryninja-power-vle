@@ -23,6 +23,7 @@ from .logical_b import lift_b_logical_instructions
 from .shift_b import lift_b_shift_instructions
 from .spe_fs import lift_sp_fss_instructions
 from .move_sysreg_b import lift_b_move_sysreg_instructions
+#from .move_sysreg_e import lift_e_move_sysreg_instructions
 
 InstLiftFuncType = Callable[[Instruction, LowLevelILFunction], None] 
 
@@ -35,6 +36,9 @@ InstLiftTable: dict[str, InstLiftFuncType] = {
     "se_rfci"    : lambda inst, il: il.append(il.intrinsic([], "rfci", [])),
     "se_rfdi"    : lambda inst, il: il.append(il.intrinsic([], "rfdi", [])),
     "se_rfmci"   : lambda inst, il: il.append(il.intrinsic([], "rfmci", [])),
+    "sync"       : lambda inst, il: il.append(il.intrinsic([], "sync", [])),
+    "wait"       : lambda inst, il: il.append(il.intrinsic([], "wait", [])),
+
     "e_b"        : lift_branch_instructions,
     "se_b"       : lift_branch_instructions,
     "e_bc"       : lift_cond_branch_instructions,
@@ -109,10 +113,12 @@ InstLiftTable: dict[str, InstLiftFuncType] = {
     "se_mfar"    : lift_logical_instructions,
     "se_mr"      : lift_logical_instructions,
     "se_mtar"    : lift_logical_instructions,
+
     "se_mflr"    : lift_move_sysreg_instructions,
     "se_mtlr"    : lift_move_sysreg_instructions,
     "se_mfctr"   : lift_move_sysreg_instructions,
     "se_mtctr"   : lift_move_sysreg_instructions,
+
     "e_stb"      : lift_store_instructions,
     "e_stbu"     : lift_store_instructions,
     "e_sth"      : lift_store_instructions,
@@ -122,6 +128,7 @@ InstLiftTable: dict[str, InstLiftFuncType] = {
     "se_stb"     : lift_store_instructions,
     "se_sth"     : lift_store_instructions,
     "se_stw"     : lift_store_instructions,
+
     "e_lmw"      : lift_multiple_instructions,
     "e_stmw"     : lift_multiple_instructions,
     "e_lmvgprw"  : lift_multiple_instructions,
@@ -136,6 +143,7 @@ InstLiftTable: dict[str, InstLiftFuncType] = {
     "e_stmvdsrrw"   : lift_multiple_instructions,
     "e_lmvmcsrrw"   : lift_multiple_instructions,
     "e_stmvmcsrrw"  : lift_multiple_instructions,
+
     "e_rlwimi"   : lift_shift_instructions,
     "e_rlwinm"   : lift_shift_instructions,
     "se_slwi"    : lift_shift_instructions,
@@ -157,6 +165,8 @@ InstLiftTable: dict[str, InstLiftFuncType] = {
     "lhaux"      : lift_b_load_instructions,
     "lwzx"       : lift_b_load_instructions,
     "lwzux"      : lift_b_load_instructions,
+    "lhbrx"      : lift_b_load_instructions,
+    "lwbrx"      : lift_b_load_instructions,
 
     "stbx"       : lift_b_store_instructions,
     "stbux"      : lift_b_store_instructions,
@@ -166,9 +176,6 @@ InstLiftTable: dict[str, InstLiftFuncType] = {
     "stwux"      : lift_b_store_instructions,
     "sthbrx"     : lift_b_store_instructions,
     "stwbrx"     : lift_b_store_instructions,
-
-    "lhbrx"      : lift_b_load_instructions,
-    "lwbrx"      : lift_b_load_instructions,
 
     "add"        : lift_b_add_instructions,
     "addo"       : lift_b_add_instructions,
@@ -218,9 +225,7 @@ InstLiftTable: dict[str, InstLiftFuncType] = {
     "eqv"        : lift_b_logical_instructions,
     "extsb"      : lift_b_logical_instructions,
     "extsh"      : lift_b_logical_instructions,
-    # "cntlzw"     : lambda inst, il: il.append(il.intrinsic([], "cntlzw", [])),
-    # "popcntb"    : lambda inst, il: il.append(il.intrinsic([], "popcntb", [])),
-
+    
     "slw"        : lift_b_shift_instructions,
     "srw"        : lift_b_shift_instructions,
     "sraw"       : lift_b_shift_instructions,
@@ -228,6 +233,28 @@ InstLiftTable: dict[str, InstLiftFuncType] = {
 
     "mtspr"      : lift_b_move_sysreg_instructions,
     "mfspr"      : lift_b_move_sysreg_instructions,
+    "mfmsr"      : lift_b_move_sysreg_instructions,
+    "mtcrf"      : lift_b_move_sysreg_instructions,
+    "mfcr"       : lift_b_move_sysreg_instructions,
+
+    #"mbar"      : lift_e_move_sysreg_instructions,
+    #"mtmsr"     : lift_e_move_sysreg_instructions,
+
     "efsneg"    : lift_sp_fss_instructions,
     "efsabs"    : lift_sp_fss_instructions,
+    # "efsadd"    : lift_sp_fss_instructions,
+    # "efssub"    : lift_sp_fss_instructions,
+    # "efsmul"    : lift_sp_fss_instructions,
+    # "efsdiv"    : lift_sp_fss_instructions,
+    # "efsmadd"   : lift_sp_fss_instructions,
+    # "efststgt"  : lift_sp_fss_instructions,
+    # "efststlt"  : lift_sp_fss_instructions,
+    # "efststeq"  : lift_sp_fss_instructions,
+    # "efsctsiz"  : lift_sp_fss_instructions,
+    # "efsctuiz"  : lift_sp_fss_instructions,
+    # "efscfui"   : lift_sp_fss_instructions,
+    # "efscfsi"   : lift_sp_fss_instructions,
+
+    # "lwdcbx" : lift_???_b_instructions,
+
 }
