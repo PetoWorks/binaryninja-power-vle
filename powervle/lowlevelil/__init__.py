@@ -22,9 +22,8 @@ from .compare_b import lift_b_compare_instructions
 from .logical_b import lift_b_logical_instructions
 from .shift_b import lift_b_shift_instructions
 from .spe_fs import lift_sp_fss_instructions
-from .move_sysreg_b import lift_b_move_sysreg_instructions
-#from .move_sysreg_e import lift_e_move_sysreg_instructions
-from .select_b import lift_b_select_instructions
+from .select import lift_select_instructions
+from .clz import lift_clz_instructions
 
 InstLiftFuncType = Callable[[Instruction, LowLevelILFunction], None] 
 
@@ -39,6 +38,7 @@ InstLiftTable: dict[str, InstLiftFuncType] = {
     "se_rfmci"   : lambda inst, il: il.append(il.intrinsic([], "rfmci", [])),
     "sync"       : lambda inst, il: il.append(il.intrinsic([], "sync", [])),
     "wait"       : lambda inst, il: il.append(il.intrinsic([], "wait", [])),
+    "cntlzw"     : lift_clz_instructions,
 
     "e_b"        : lift_branch_instructions,
     "se_b"       : lift_branch_instructions,
@@ -48,7 +48,6 @@ InstLiftTable: dict[str, InstLiftFuncType] = {
     "se_bctr"    : lift_indirect_branch_instructions,
     "se_add"     : lift_add_instructions,
     "e_add16i"   : lift_add_instructions,
-    "e_add2i"    : lift_add_instructions,
     "e_add2i."   : lift_add_instructions,
     "e_add2is"   : lift_add_instructions,
     "e_addi"     : lift_add_instructions,
@@ -232,14 +231,15 @@ InstLiftTable: dict[str, InstLiftFuncType] = {
     "sraw"       : lift_b_shift_instructions,
     "srawi"      : lift_b_shift_instructions,
 
-    "mtspr"      : lift_b_move_sysreg_instructions,
-    "mfspr"      : lift_b_move_sysreg_instructions,
-    "mfmsr"      : lift_b_move_sysreg_instructions,
-    "mtcrf"      : lift_b_move_sysreg_instructions,
-    "mfcr"       : lift_b_move_sysreg_instructions,
+    "mtspr"      : lift_move_sysreg_instructions,
+    "mfspr"      : lift_move_sysreg_instructions,
+    "mfcr"       : lift_move_sysreg_instructions,
+    "mtcrf"      : lift_move_sysreg_instructions,
+    "mfmsr"      : lift_move_sysreg_instructions,
 
-    #"mbar"      : lift_e_move_sysreg_instructions,
-    #"mtmsr"     : lift_e_move_sysreg_instructions,
+    "mtmsr"     : lift_move_sysreg_instructions,
+    "mbar"      : lambda inst, il: il.append(il.intrinsic([], "mbar", [])),
+    "wrteei"    : lambda inst, il: il.append(il.intrinsic([], "wrteei", [])),
 
     "efsneg"    : lift_sp_fss_instructions,
     "efsabs"    : lift_sp_fss_instructions,
@@ -257,5 +257,5 @@ InstLiftTable: dict[str, InstLiftFuncType] = {
     # "efscfsi"   : lift_sp_fss_instructions,
 
     # "lwdcbx" : lift_b_???_instructions,
-    "isel" : lift_b_select_instructions,
+    "isel"          : lift_select_instructions,
 }

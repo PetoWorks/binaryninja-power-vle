@@ -1,6 +1,6 @@
 from typing import Tuple, List
 from binaryninja import LowLevelILOperation
-from binaryninja import Intrinsic, IntrinsicInfo, Type
+from binaryninja import Intrinsic, IntrinsicInfo, IntrinsicInput, Type
 from binaryninja.log import log_warn, log_error, log_debug
 
 from binaryninja.architecture import (
@@ -337,7 +337,9 @@ class PowerVLE(Architecture):
         'rfmci' : IntrinsicInfo([], []),
         'sync'  : IntrinsicInfo([], []),
         'wait'  : IntrinsicInfo([], []),
-        'cntlzw'  : IntrinsicInfo([], []),
+        'mbar'  : IntrinsicInfo([], []),
+        'wrteei': IntrinsicInfo([], []),
+        #'cntlzw'  : IntrinsicInfo(inputs=[IntrinsicInput(type=Type.int(4, False), name="rs")], outputs=[Type.int(4, False)]),
     }
 
     categories = [PowerCategory.VLE, PowerCategory.B, PowerCategory.SP,
