@@ -1115,7 +1115,7 @@ class Decoder:
             0x7: Level(0, 6, {
                 0b011111: Level(27, 31, {
                     0x2: Level(21, 27, {
-                        0b001001: InstX("mtmsr", "E", ["RS", "L"]),
+                        0b001001: InstX("mtmsr", "E", ["RS"]),
                         0b110001: InstX("tlbivax", "E", []),
                         0b111001: InstX("tlbsx", "E", ["RA", "RB"]),
                         0b111011: InstX("tlbre", "E", []),

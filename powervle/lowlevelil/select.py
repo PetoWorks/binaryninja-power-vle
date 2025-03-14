@@ -1,7 +1,7 @@
 from binaryninja.lowlevelil import LowLevelILFunction, LowLevelILLabel
 from ..instruction import Instruction
 
-def lift_b_select_instructions(inst: Instruction, il: LowLevelILFunction) -> None:
+def lift_select_instructions(inst: Instruction, il: LowLevelILFunction) -> None:
     for i in range(len(inst.operands)):
         if i == 0: oper_0 = inst.operands[0]
         elif i == 1: oper_1 = inst.operands[1]
