@@ -100,5 +100,13 @@ def lift_b_load_instructions(inst: Instruction, il: LowLevelILFunction) -> None:
             swap = byte_reverse_register(il, rt, 4)
 
         il.append(il.set_reg(il.arch.address_size, rt, swap))
+    # InstX("lwdcbx", "B", ["RT", "RA", "RB"])
+    elif inst.name == "lwdcbx":
+        assert len(inst.operands) == 3
+        rt = inst.get_operand_value(oper_0)
+        ra = inst.get_operand_value(oper_1)
+        rb = inst.get_operand_value(oper_2)
+        ei0 = il.unimplemented()
+        il.append(ei0)
     else:
         il.append(il.unimplemented())

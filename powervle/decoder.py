@@ -376,15 +376,15 @@ class Decoder:
                         0x8: Level(28, 32, {
                             0x0: InstEVX("evfsadd", "SP.FV", ["RT", "RA", "RB"]),
                             0x1: InstEVX("evfssub", "SP.FV", ["RT", "RA", "RB"]),
-                            0x2: InstEVX("evfsmadd", "SP.FV", ["RT", "RA", "RB"]),   # CHECK
-                            0x3: InstEVX("evfsmsub", "SP.FV", ["RT", "RA", "RB"]),   # CHECK
+                            0x2: InstEVX("evfsmadd", "SP.FV", ["RT", "RA", "RB"]),
+                            0x3: InstEVX("evfsmsub", "SP.FV", ["RT", "RA", "RB"]), 
                             0x4: InstEVX("evfsabs", "SP.FV", ["RT", "RA"]),
                             0x5: InstEVX("evfsnabs", "SP.FV", ["RT", "RA"]),
                             0x6: InstEVX("evfsneg", "SP.FV", ["RT", "RA"]),
                             0x8: InstEVX("evfsmul", "SP.FV", ["RT", "RA", "RB"]),
                             0x9: InstEVX("evfsdiv", "SP.FV", ["RT", "RA", "RB"]),
-                            0xA: InstEVX("evfsnmadd", "SP.FV", ["RT", "RA", "RB"]),   # CHECK
-                            0xB: InstEVX("evfsnmsub", "SP.FV", ["RT", "RA", "RB"]),   # CHECK
+                            0xA: InstEVX("evfsnmadd", "SP.FV", ["RT", "RA", "RB"]),
+                            0xB: InstEVX("evfsnmsub", "SP.FV", ["RT", "RA", "RB"]),
                             0xC: InstEVX("evfscmpgt", "SP.FV", ["BF", "RA", "RB"]),
                             0xD: InstEVX("evfscmplt", "SP.FV", ["BF", "RA", "RB"]),
                             0xE: InstEVX("evfscmpeq", "SP.FV", ["BF", "RA", "RB"]),
@@ -702,7 +702,7 @@ class Decoder:
                     }),
 
                     0x2: Level(21, 27, {
-                        0b100100: InstX("lwdcbx", "B", ["RT", "RA", "RB"]), # CHECK: "B" cat?
+                        0b100100: InstX("lwdcbx", "B", ["RT", "RA", "RB"]),
                     }),
 
                     0x3: Level(21, 27, {
@@ -718,8 +718,8 @@ class Decoder:
                     0x4: Level(21, 27, {
                         0b000000: InstX("tw", "B", ["TO", "RA", "RB"]),
                         0b000001: InstX("lwarx", "B", ["RT", "RA", "RB"]),
-                        0b000011: InstX("lbarx", "B", ["RT", "RA", "RB"]), # CHECK: "B" cat?
-                        0b000111: InstX("lharx", "B", ["RT", "RA", "RB"]), # CHECK: "B" cat?
+                        0b000011: InstX("lbarx", "B", ["RT", "RA", "RB"]), 
+                        0b000111: InstX("lharx", "B", ["RT", "RA", "RB"]),
                     }),
 
                     0x6: Level(21, 27, {
@@ -731,8 +731,8 @@ class Decoder:
                         0b100001: InstX("lwbrx", "B", ["RT", "RA", "RB"]),
                         0b100101: InstX("sync", "B", ["L"]),
                         0b101001: InstX("stwbrx", "B", ["RS", "RA", "RB"]),
-                        0b101011: InstX("stbcx.", "B", ["RT", "RA", "RB"]), # CHECK: "B" cat?
-                        0b101101: InstX("sthcx.", "B", ["RT", "RA", "RB"]), # CHECK: "B" cat?
+                        0b101011: InstX("stbcx.", "B", ["RT", "RA", "RB"]), 
+                        0b101101: InstX("sthcx.", "B", ["RT", "RA", "RB"]), 
                         0b110001: InstX("lhbrx", "B", ["RT", "RA", "RB"]),
                         0b111001: InstX("sthbrx", "B", ["RS", "RA", "RB"]),
                         0b111101: InstX("icbi", "B", ["RA", "RB"]),

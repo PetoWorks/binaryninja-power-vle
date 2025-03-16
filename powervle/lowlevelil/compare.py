@@ -86,8 +86,7 @@ def lift_compare_instructions(inst: Instruction, il: LowLevelILFunction) -> None
         else:
             ei0 = il.zero_extend(4, il.reg(2, ra))
             ei1 = il.zero_extend(4, il.reg(2, rb))
-        flags = bf + "s"
-        ei2 = il.sub(4, ei0, ei1, flags)
+        ei2 = il.sub(4, ei0, ei1, f"{bf}s")
         il.append(ei2)
 
     else:

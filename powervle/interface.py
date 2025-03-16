@@ -284,6 +284,9 @@ class PowerVLE(Architecture):
         'cr0s', 'cr1s', 'cr2s', 'cr3s', 'cr4s', 'cr5s', 'cr6s', 'cr7s',
         'cr0u', 'cr1u', 'cr2u', 'cr3u', 'cr4u', 'cr5u', 'cr6u', 'cr7u',
         'cr0f', 'cr1f', 'cr2f', 'cr3f', 'cr4f', 'cr5f', 'cr6f', 'cr7f',
+        'cr0tstgt', 'cr1tstgt', 'cr2tstgt', 'cr3tstgt', 'cr4tstgt', 'cr5tstgt', 'cr6tstgt', 'cr7tstgt', 
+        'cr0tstlt', 'cr1tstlt', 'cr2tstlt', 'cr3tstlt', 'cr4tstlt', 'cr5tstlt', 'cr6tstlt', 'cr7tstlt', 
+        'cr0tsteq', 'cr1tsteq', 'cr2tsteq', 'cr3tsteq', 'cr4tsteq', 'cr5tsteq', 'cr6tsteq', 'cr7tsteq', 
         'xer', 'xer_ca', 'xer_ov_so',
         'mtcr0', 'mtcr1', 'mtcr2', 'mtcr3', 'mtcr4', 'mtcr5', 'mtcr6', 'mtcr7',
         'invl0', 'invl1', 'invl2', 'invl3', 'invl4', 'invl5', 'invl6', 'invl7', 'invall'
@@ -306,6 +309,15 @@ class PowerVLE(Architecture):
         'cr2f': ['cr2lt', 'cr2gt', 'cr2eq', 'cr2so'], 'cr3f': ['cr3lt', 'cr3gt', 'cr3eq', 'cr3so'],
         'cr4f': ['cr4lt', 'cr4gt', 'cr4eq', 'cr4so'], 'cr5f': ['cr5lt', 'cr5gt', 'cr5eq', 'cr5so'],
         'cr6f': ['cr6lt', 'cr6gt', 'cr6eq', 'cr6so'], 'cr7f': ['cr7lt', 'cr7gt', 'cr7eq', 'cr7so'],
+
+        'cr0tstgt': ['cr0gt'], 'cr1tstgt': ['cr1gt'], 'cr2tstgt': ['cr2gt'], 'cr3tstgt': ['cr3gt'],
+        'cr4tstgt': ['cr4gt'], 'cr5tstgt': ['cr5gt'], 'cr6tstgt': ['cr6gt'], 'cr7tstgt': ['cr7gt'],
+
+        'cr0tstlt': ['cr0gt'], 'cr1tstlt': ['cr1gt'], 'cr2tstlt': ['cr2gt'], 'cr3tstlt': ['cr3gt'],
+        'cr4tstlt': ['cr4gt'], 'cr5tstlt': ['cr5gt'], 'cr6tstlt': ['cr6gt'], 'cr7tstlt': ['cr7gt'],
+        
+        'cr0tsteq': ['cr0gt'], 'cr1tsteq': ['cr1gt'], 'cr2tsteq': ['cr2gt'], 'cr3tsteq': ['cr3gt'],
+        'cr4tsteq': ['cr4gt'], 'cr5tsteq': ['cr5gt'], 'cr6tsteq': ['cr6gt'], 'cr7tsteq': ['cr7gt'],
 
         'xer': ['xer_so', 'xer_ov', 'xer_ca'],
         'xer_ca': ['xer_ca'],
@@ -462,7 +474,7 @@ class PowerVLE(Architecture):
 
         if write_type.startswith("cr"):
             cond = flag[-2:]
-            suf = write_type[-1]
+            suf = write_type[3:]
             fn = None
 
             if cond == "lt":
@@ -480,6 +492,12 @@ class PowerVLE(Architecture):
                     fn = il.compare_unsigned_greater_than
                 elif suf == "f":
                     fn = il.float_compare_greater_than
+                elif suf == "tstgt":
+                    fn = il.float_compare_greater_than
+                elif suf == "tstlt":
+                    fn = il.float_compare_less_than
+                elif suf == "tsteq":
+                    fn = il.float_compare_equal
             
             elif cond == "eq":
                 if suf == "s" or suf == "u":
