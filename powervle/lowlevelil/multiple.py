@@ -1,6 +1,7 @@
 from binaryninja.lowlevelil import LowLevelILFunction
 from ..instruction import Instruction
 from binaryninja.log import log_warn, log_error, log_debug
+from ..utils import sign_extend
 
 GPR = ['r0', 'r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'r7', 'r8', 'r9', \
         'r10', 'r11', 'r12', 'r13', 'r14', 'r15', 'r16', 'r17', 'r18', 'r19', \
@@ -8,10 +9,11 @@ GPR = ['r0', 'r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'r7', 'r8', 'r9', \
         'r30', 'r31']
 
 def get_EA(il: LowLevelILFunction, ra, d8):
+    d8_sext = sign_extend(d8, 8)
     if ra == 0:
-        EA = il.sign_extend(4, il.const(4, d8))
+        EA = il.const(4, d8_sext)
     else :
-        EA = il.add(4, il.reg(4, ra), il.sign_extend(4, il.const(4, d8)))
+        EA = il.add(4, il.reg(4, ra), il.const(4, d8_sext))
     return EA
 
 ## 5.4 Fixed-Point Load and Store Multiple Instructions
@@ -92,7 +94,7 @@ def lift_multiple_instructions(inst: Instruction, il: LowLevelILFunction) -> Non
         EA = get_EA(il, ra, d8)
         while i <= 31:
             ei0 = il.store(4, EA, il.reg(4, GPR[i]))
-            il.append(ei0)       
+            il.append(ei0)
             i += 1
             d8 += 4
             EA = get_EA(il, ra, d8)
