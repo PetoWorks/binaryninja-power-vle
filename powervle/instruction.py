@@ -5,9 +5,9 @@ def scimm(f: int, scl: int, ui8: int) -> int:
     scale = scl * 8
     scimm = ui8 << scale
     if f:
-        scimm &= (1 << scale) - 1
-        scimm &= ((1 << (56 - scale)) - 1) << (scale + 8)
-    return scimm
+        scimm |= (1 << scale) - 1
+        scimm |= ((1 << (56 - scale)) - 1) << (scale + 8)
+    return scimm & 0xffffffff
 
 
 class Instruction:
