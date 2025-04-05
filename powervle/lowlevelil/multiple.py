@@ -21,22 +21,18 @@ def lift_multiple_instructions(inst: Instruction, il: LowLevelILFunction) -> Non
         elif i == 1: oper_1 = inst.operands[1]
         elif i == 2: oper_2 = inst.operands[2]
     # Load Multiple Word: InstD8("e_lmw", "VLE", ["RT", "RA", "D8"])
-    if inst.name == "e_lmw":
+    if inst.name == "e_lmw": # e_lmw r13, r30, 0x4
         assert len(inst.operands) == 3
         rt = inst.get_operand_value(oper_0)
         ra = inst.get_operand_value(oper_1)
         d8 = inst.get_operand_value(oper_2)
 
-        i = GPR.index(rt)
-        if ra in GPR[i:]:
-            il.append(il.unimplemented())
-            return
-        
+        r = GPR.index(rt)        
         EA = get_EA(il, ra, d8)
-        while i <= 31:
-            ei0 = il.set_reg(4, GPR[i], il.zero_extend(4, il.load(4, EA)))
+        while r <= 31:
+            ei0 = il.set_reg(4, GPR[r], il.zero_extend(4, il.load(4, EA)))
             il.append(ei0)
-            i += 1
+            r += 1
             d8 += 4
             EA = get_EA(il, ra, d8)
 
