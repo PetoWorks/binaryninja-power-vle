@@ -66,12 +66,7 @@ def lift_load_instructions(inst: Instruction, il: LowLevelILFunction) -> None:
         rz = inst.get_operand_value(oper_0)
         rx = inst.get_operand_value(oper_1)
         sd4 = inst.get_operand_value(oper_2)
-        if inst.name == "se_lbz":
-            ei0 = il.const(4, sd4)
-        elif inst.name == "se_lhz":
-            ei0 = il.const(4, sd4 << 1)
-        else:
-            ei0 = il.const(4, sd4 << 2) # "se_lwz"
+        ei0 = il.const(4, sd4) # "se_lwz"
         EA = il.add(4, il.reg(4, rx), ei0)
         if inst.name == "se_lbz":
             ei0 = il.load(1, EA)
