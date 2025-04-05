@@ -1,8 +1,8 @@
 from binaryninja.lowlevelil import LowLevelILFunction
 from ..instruction import Instruction
 
-# Float Scalar Single Instructions             
-def lift_sp_fss_instructions(inst: Instruction, il: LowLevelILFunction) -> None:
+# EFPU (Embedded Floating-Point Unit)        
+def lift_efpu_instructions(inst: Instruction, il: LowLevelILFunction) -> None:
     for i in range(len(inst.operands)):
         if i == 0: oper_0 = inst.operands[0]
         elif i == 1: oper_1 = inst.operands[1]

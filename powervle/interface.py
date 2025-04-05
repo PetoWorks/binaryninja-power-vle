@@ -65,7 +65,6 @@ class PowerVLE(Architecture):
     max_instr_length = 4
 
     regs = {
-        # spr
         'cr'    : RegisterInfo("cr", 4, 0),
 
         'xer'   : RegisterInfo("xer", 4, 0),
@@ -106,6 +105,7 @@ class PowerVLE(Architecture):
         'ivor13': RegisterInfo("ivor13", 4, 0),
         'ivor14': RegisterInfo("ivor14", 4, 0),
         'ivor15': RegisterInfo("ivor15", 4, 0),
+        'ivor32': RegisterInfo("ivor32", 4, 0),       
         'ivor33': RegisterInfo("ivor33", 4, 0),
         'ivor34': RegisterInfo("ivor34", 4, 0),
         'ivor35': RegisterInfo("ivor35", 4, 0),
@@ -343,10 +343,10 @@ class PowerVLE(Architecture):
 
     intrinsics = {
         'isync' : IntrinsicInfo([], []),
-        'rfi'   : IntrinsicInfo([], []),
-        'rfci'  : IntrinsicInfo([], []),
-        'rfdi'  : IntrinsicInfo([], []),
-        'rfmci' : IntrinsicInfo([], []),
+        'se_rfi'   : IntrinsicInfo([], []),
+        'se_rfci'  : IntrinsicInfo([], []),
+        'se_rfdi'  : IntrinsicInfo([], []),
+        'se_rfmci' : IntrinsicInfo([], []),
         'sync'  : IntrinsicInfo([], []),
         'wait'  : IntrinsicInfo([], []),
         'mbar'  : IntrinsicInfo([], []),
@@ -505,12 +505,21 @@ class PowerVLE(Architecture):
                 elif suf == "f":
                     fn = il.float_compare_equal
             
+            # TODO
+            # elif cond == "so":
+            #     if suf == "s":
+            #         fn = il.unimplemented
+            #     elif suf == "u":
+            #         fn = il.unimplemented
+            #     elif suf == "f":
+            #         fn = il.unimplemented
+            
             if fn:
                 left = get_expr_op(il, op, operands, size)
                 right = il.const(size, 0)
                 return fn(size, left, right)
             
-        if flag == "xer_ca":
+        if write_type == "xer_ca":
             if op == LowLevelILOperation.LLIL_ASR:
 
                 if isinstance(operands[1], int):

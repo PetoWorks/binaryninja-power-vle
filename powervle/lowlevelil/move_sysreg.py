@@ -70,9 +70,9 @@ def lift_move_sysreg_instructions(inst: Instruction, il: LowLevelILFunction) -> 
         ei0 = il.set_reg(4, rt, il.reg(4, "cr"))
         il.append(ei0)
 
-    # Move To Condition Register Fields: InstXFX("mtcrf", "B", ["FXM", "RS"])
+    # Move To Condition Register Fields: InstXFX("mtcrf", "B",  ["FXM", "RS"])
     elif inst.name == "mtcrf":
-        assert len(inst.operands) == 1
+        assert len(inst.operands) == 2
         fxm = inst.get_operand_value(oper_0)
         rs = inst.get_operand_value(oper_1)
         mask = 0x80
