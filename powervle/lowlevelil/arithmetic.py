@@ -71,14 +71,19 @@ def lift_sub_instructions(inst: Instruction, il: LowLevelILFunction) -> None:
         elif i == 3: oper_3 = inst.operands[3]
 
     # InstRR("se_sub", "VLE", ["RX", "RY"]): Subtract
-    # InstRR("se_subf", "VLE", ["RX", "RY"]): Subtract From Short Form
-    if inst.name in ["se_sub", "se_subf"]:
+    if inst.name == "se_sub":
         assert len(inst.operands) == 2
         rx = inst.get_operand_value(oper_0)
         ry = inst.get_operand_value(oper_1)
         ei0 = il.sub(4, il.reg(4, rx), il.reg(4, ry))
         ei0 = il.set_reg(4, rx, ei0)
         il.append(ei0)
+    # InstRR("se_subf", "VLE", ["RX", "RY"]): Subtract From Short Form
+    elif inst.name == "se_subf":
+        rx = inst.get_operand_value(oper_0)
+        ry = inst.get_operand_value(oper_1)
+        ei0 = il.sub(4, il.reg(4, ry), il.reg(4, rx))
+        ei0 = il.set_reg(4, rx, ei0)
     elif inst.name == "e_subfic": # Subtract From Scaled Immediate Carrying
         assert len(inst.operands) == 4
         rt = inst.get_operand_value(oper_0)
