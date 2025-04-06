@@ -9,11 +9,10 @@ GPR = ['r0', 'r1', 'r2', 'r3', 'r4', 'r5', 'r6', 'r7', 'r8', 'r9', \
         'r30', 'r31']
 
 def get_EA(il: LowLevelILFunction, ra, d8):
-    d8_sext = sign_extend(d8, 8)
     if ra == 0:
-        EA = il.const(4, d8_sext)
+        EA = il.const(4, d8)
     else :
-        EA = il.add(4, il.reg(4, ra), il.const(4, d8_sext))
+        EA = il.add(4, il.reg(4, ra), il.const(4, d8))
     return EA
 
 ## 5.4 Fixed-Point Load and Store Multiple Instructions
