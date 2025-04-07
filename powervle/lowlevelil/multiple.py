@@ -31,7 +31,7 @@ def lift_multiple_instructions(inst: Instruction, il: LowLevelILFunction) -> Non
         r = GPR.index(rt)        
         EA = get_EA(il, ra, d8)
         while r <= 31:
-            ei0 = il.set_reg(4, GPR[r], il.zero_extend(4, il.load(4, EA)))
+            ei0 = il.set_reg(4, GPR[r], il.load(4, EA))
             il.append(ei0)
             r += 1
             d8 += 4
