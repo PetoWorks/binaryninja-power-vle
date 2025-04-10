@@ -84,6 +84,7 @@ def lift_sub_instructions(inst: Instruction, il: LowLevelILFunction) -> None:
         ry = inst.get_operand_value(oper_1)
         ei0 = il.sub(4, il.reg(4, ry), il.reg(4, rx))
         ei0 = il.set_reg(4, rx, ei0)
+        il.append(ei0)
     elif inst.name == "e_subfic": # Subtract From Scaled Immediate Carrying
         assert len(inst.operands) == 4
         rt = inst.get_operand_value(oper_0)
