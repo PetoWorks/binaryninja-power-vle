@@ -30,7 +30,7 @@ def lift_add_instructions(inst: Instruction, il: LowLevelILFunction) -> None:
         ra = inst.get_operand_value(oper_0)
         si = inst.get_operand_value(oper_1)
         if inst.name == "e_add2is":
-            ei0 = il.const(4, si << 16)
+            ei0 = il.const(4, si << 2)
             flags = None
         else:
             ei0 = il.const(4, si)
